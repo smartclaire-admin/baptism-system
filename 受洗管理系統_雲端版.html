@@ -19,31 +19,33 @@
   }
 
   function parseGviz(jsonText){
-    // gviz 回傳格式：google.visualization.Query.setResponse({...})
-    var json = jsonText.replace(/^.*?setResponse\(/, '').replace(/\);\s*$/, '');
-    var data = JSON.parse(json);
+    // 移除 /*O_o*/\n 前綴，取出 setResponse({...}) 裡的 JSON
+    var cleaned = jsonText.replace(/^\/\*[\s\S]*?\*\/\s*/, '');
+    cleaned = cleaned.replace(/^google\.visualization\.Query\.setResponse\(/, '');
+    cleaned = cleaned.replace(/\);?\s*$/, '');
+    var data = JSON.parse(cleaned);
     var cols = data.table.cols.map(function(c){ return c.label; });
     var rows = data.table.rows || [];
     return rows.map(function(row, idx){
-      var rec = {id: idx+1};
+      var rec = {};
       cols.forEach(function(col, j){
-        var cell = row.c[j];
+        var cell = row.c ? row.c[j] : null;
         rec[col] = (cell && cell.v !== null && cell.v !== undefined) ? String(cell.v) : '';
       });
       return {
         id: idx+1,
-        batch: rec['屆數']||'', no: rec['編號']||'',
-        district: rec['區']||'', bigGroup: rec['大家']||'', smallGroup: rec['小家']||'',
-        name: rec['姓名']||'', gender: rec['性別']||'',
-        baptismDate: rec['受洗日期']||'', birthday: rec['生日']||'', age: rec['受洗年齡']||'',
-        phoneH: rec['電話(H)']||'', phoneM: rec['電話(M)']||'',
-        address: rec['地址']||'', email: rec['E_MAIL']||'',
-        baptismType: rec['受洗方式']||'', tookClass: rec['是否上過受洗課程']||'',
-        paperSubmitted: rec['紙本繳交']||'', paperDate: rec['紙本繳交日期']||'',
-        photoSubmitted: rec['已交照片']||'', bibleReceived: rec['聖經領取']||'',
-        certReceived: rec['受洗證書領取']||'', church: rec['教會']||'',
-        maritalStatus: rec['婚姻狀況']||'', couplesBaptism: rec['本次是否夫妻同受洗']||'',
-        spouseName: rec['您的丈夫/妻子姓名']||'', notes: rec['備註']||''
+        batch:rec['屆數']||'', no:rec['編號']||'',
+        district:rec['區']||'', bigGroup:rec['大家']||'', smallGroup:rec['小家']||'',
+        name:rec['姓名']||'', gender:rec['性別']||'',
+        baptismDate:rec['受洗日期']||'', birthday:rec['生日']||'', age:rec['受洗年齡']||'',
+        phoneH:rec['電話(H)']||'', phoneM:rec['電話(M)']||'',
+        address:rec['地址']||'', email:rec['E_MAIL']||'',
+        baptismType:rec['受洗方式']||'', tookClass:rec['是否上過受洗課程']||'',
+        paperSubmitted:rec['紙本繳交']||'', paperDate:rec['紙本繳交日期']||'',
+        photoSubmitted:rec['已交照片']||'', bibleReceived:rec['聖經領取']||'',
+        certReceived:rec['受洗證書領取']||'', church:rec['教會']||'',
+        maritalStatus:rec['婚姻狀況']||'', couplesBaptism:rec['本次是否夫妻同受洗']||'',
+        spouseName:rec['您的丈夫/妻子姓名']||'', notes:rec['備註']||''
       };
     });
   }
