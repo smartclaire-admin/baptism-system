@@ -591,46 +591,64 @@ function exportCustomCSV(){
 }
 
 // ── 證書 ──
-function certHTML(r){
-  return '<div class="cert-preview">'+
-    '<div class="cert-cross">✝</div>'+
-    '<div class="cert-title">受洗證書</div>'+
-    '<div class="cert-sub">CERTIFICATE OF BAPTISM</div>'+
-    '<div class="cert-name">'+r.name+'</div>'+
-    '<div class="cert-body">茲證明 <strong>'+r.name+'</strong> 弟兄/姊妹<br>於 <strong>'+(r.baptismDate||'　　　　')+'</strong> 在本教會接受<strong>'+(r.baptismType||'受洗')+'</strong><br>正式成為基督徒，特頒此證書以資證明</div>'+
-    '<div class="cert-info">屆數：第'+(r.batch||'　')+'屆｜編號：'+(r.no||'　')+'｜教會：'+(r.church||'卓越北大行道會')+'</div>'+
-    '<div class="cert-seal">牧師簽名：＿＿＿＿＿＿　　教會印章：（　　　　　）</div>'+
-  '</div>';
-}
 function updateCertPreview(){
   var b=document.getElementById('cBatch').value;
   var br=document.getElementById('cBranch').value;
   var data=getByBatchBranch(b,br);
-  document.getElementById('cPreview').innerHTML=data.length?certHTML(data[0]):'<p style="color:var(--red)">沒有符合的資料</p>';
+  if(!data.length){document.getElementById('cPreview').innerHTML='<p style="color:var(--red)">沒有符合的資料</p>';return;}
+  var r=data[0];
+  var dt=r.baptismDate?r.baptismDate.split('/'):{};
+  document.getElementById('cPreview').innerHTML=
+    '<div style="width:185mm;height:260mm;position:relative;border:2px dashed #2c6fad;background:rgba(255,255,255,0.5);font-family:Noto Serif TC,新細明體,serif">'+
+    '<div style="position:absolute;top:2.3%;left:4%;font-size:5.5mm;color:#1a1a1a">No. '+(r.no||'')+'</div>'+
+    '<div style="position:absolute;top:32.5%;left:32%;display:flex;align-items:baseline;gap:4px">'+
+      '<span style="font-size:7.5mm;color:#1a1a1a;letter-spacing:2px">恭喜</span>'+
+      '<span style="font-size:12mm;font-weight:900;color:#1a1a1a;letter-spacing:6px">'+r.name+'</span>'+
+      '<span style="font-size:9mm;font-weight:900;color:#1a1a1a;letter-spacing:4px">'+(r.gender==='女'?'姊妹':'弟兄')+'</span>'+
+    '</div>'+
+    (r.baptismDate?
+    '<div style="position:absolute;top:50.8%;left:32%;display:flex;align-items:baseline;font-size:7.5mm;color:#1a1a1a;letter-spacing:2px">'+
+      '<span>並於主曆　</span>'+
+      '<span style="color:#cc0000;font-weight:700;letter-spacing:4px">'+(dt[0]||'')+'</span>'+
+      '<span> 年　</span>'+
+      '<span style="color:#cc0000;font-weight:700;letter-spacing:4px">'+(dt[1]||'')+'</span>'+
+      '<span> 月　</span>'+
+      '<span style="color:#cc0000;font-weight:700;letter-spacing:4px">'+(dt[2]||'')+'</span>'+
+      '<span> 日，</span>'+
+    '</div>':'')+'</div>';
 }
 function printCerts(){
   var b=document.getElementById('cBatch').value;
   var br=document.getElementById('cBranch').value;
   var data=getByBatchBranch(b,br);
   if(!data.length){alert('沒有符合的資料');return;}
-  var css='@page{size:A4;margin:15mm}body{font-family:"Microsoft JhengHei","PingFang TC",sans-serif}.cert{border:3px double #c9a84c;border-radius:12px;padding:40px;text-align:center;background:linear-gradient(135deg,#fffdf5,#fff8e7);max-width:560px;margin:0 auto 20mm;page-break-after:always}.cert:last-child{page-break-after:avoid}.cross{font-size:36px;color:#c9a84c;margin-bottom:10px}.title{font-size:28px;font-weight:700;color:#1a2e4a;letter-spacing:4px;margin-bottom:6px}.sub{font-size:13px;color:#888;margin-bottom:28px;letter-spacing:2px}.name{font-size:34px;font-weight:700;color:#1a2e4a;border-bottom:2px solid #c9a84c;padding-bottom:8px;margin-bottom:18px;display:inline-block}.body{font-size:14px;color:#333;line-height:2.2;margin-bottom:20px}.info{font-size:12px;color:#888}.seal{margin-top:24px;font-size:11px;color:#888;border-top:1px solid #ddd;padding-top:14px}';
+  var css='@page{size:185mm 260mm;margin:0}body{margin:0;padding:0;font-family:"Noto Serif TC","新細明體","PMingLiU",serif}.cert{width:185mm;height:260mm;position:relative;background:transparent;page-break-after:always;overflow:hidden}.cert:last-child{page-break-after:avoid}.c-no{position:absolute;top:2.3%;left:4%;font-size:5.5mm;color:#1a1a1a}.c-name{position:absolute;top:32.5%;left:32%;display:flex;align-items:baseline;gap:4px}.c-greeting{font-size:7.5mm;color:#1a1a1a;letter-spacing:2px}.c-n{font-size:12mm;font-weight:900;color:#1a1a1a;letter-spacing:6px}.c-t{font-size:9mm;font-weight:900;color:#1a1a1a;letter-spacing:4px}.c-date{position:absolute;top:50.8%;left:32%;display:flex;align-items:baseline;font-size:7.5mm;color:#1a1a1a;letter-spacing:2px}.red{color:#cc0000;font-weight:700;letter-spacing:4px}';
   var certs='';
   data.forEach(function(r){
+    var dt=r.baptismDate?r.baptismDate.split('/'):{};
     certs+='<div class="cert">'+
-      '<div class="cross">✝</div>'+
-      '<div class="title">受洗證書</div>'+
-      '<div class="sub">CERTIFICATE OF BAPTISM</div>'+
-      '<div class="name">'+r.name+'</div>'+
-      '<div class="body">茲證明 <strong>'+r.name+'</strong> 弟兄/姊妹<br>於 <strong>'+(r.baptismDate||'　　　　')+'</strong> 在本教會接受<strong>'+(r.baptismType||'受洗')+'</strong><br>正式成為基督徒，特頒此證書以資證明</div>'+
-      '<div class="info">屆數：第'+(r.batch||'　')+'屆｜編號：'+(r.no||'　')+'｜教會：'+(r.church||'卓越北大行道會')+'</div>'+
-      '<div class="seal">牧師簽名：＿＿＿＿＿＿　　　教會印章：（　　　　　）</div>'+
-    '</div>';
+      '<div class="c-no">No. '+(r.no||'')+'</div>'+
+      '<div class="c-name">'+
+        '<span class="c-greeting">恭喜</span>'+
+        '<span class="c-n">'+r.name+'</span>'+
+        '<span class="c-t">'+(r.gender==='女'?'姊妹':'弟兄')+'</span>'+
+      '</div>'+
+      (r.baptismDate?
+      '<div class="c-date">'+
+        '<span>並於主曆　</span>'+
+        '<span class="red">'+(dt[0]||'')+'</span>'+
+        '<span> 年　</span>'+
+        '<span class="red">'+(dt[1]||'')+'</span>'+
+        '<span> 月　</span>'+
+        '<span class="red">'+(dt[2]||'')+'</span>'+
+        '<span> 日，</span>'+
+      '</div>':'')+'</div>';
   });
   var w=window.open('','_blank');
-  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>受洗證書</title><style>'+css+'</style></head><body>'+certs+'</body></html>');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>受洗證書</title><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap" rel="stylesheet"><style>'+css+'</style></head><body>'+certs+'</body></html>');
   w.document.close();
   w.focus();
-  setTimeout(function(){w.print();},500);
+  setTimeout(function(){w.print();},800);
 }
 
 // ── CSV ──
