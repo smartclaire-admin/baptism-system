@@ -4,28 +4,206 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>受洗管理系統 — 卓越北大教會</title>
-<script>window._htmlBody = "\n<div class=\"header\">\n  <div class=\"header-title\"><span class=\"cross\">✝</span>卓越北大教會 — 受洗管理系統</div>\n  <div class=\"hstats\">\n    <div class=\"hstat\"><strong id=\"hTotal\">-</strong>總人數</div>\n    <div class=\"hstat\"><strong id=\"hPhoto\">-</strong>未交照片</div>\n    <div class=\"hstat\"><strong id=\"hBible\">-</strong>未領聖經</div>\n    <div class=\"hstat\"><strong id=\"hCert\">-</strong>未領證書</div>\n  </div>\n</div>\n<div class=\"layout\">\n  <nav class=\"sidebar\">\n    <div class=\"sidebar-label\">主要功能</div>\n    <div class=\"nav-btn active\" id=\"nav-dashboard\" onclick=\"showPage('dashboard')\"><span class=\"nav-icon\">📊</span>總覽儀表板</div>\n    <div class=\"nav-btn\" id=\"nav-list\" onclick=\"showPage('list')\"><span class=\"nav-icon\">📋</span>受洗名單</div>\n    <div class=\"nav-btn\" id=\"nav-todo\" onclick=\"showPage('todo')\"><span class=\"nav-icon\">⚠️</span>待辦追蹤<span class=\"nav-badge\" id=\"todoBadge\">-</span></div>\n    <div class=\"sidebar-div\"></div>\n    <div class=\"sidebar-label\">統計與匯出</div>\n    <div class=\"nav-btn\" id=\"nav-stats\" onclick=\"showPage('stats')\"><span class=\"nav-icon\">📈</span>統計報表</div>\n    <div class=\"nav-btn\" id=\"nav-export\" onclick=\"showPage('export')\"><span class=\"nav-icon\">📤</span>匯出工具</div>\n  </nav>\n  <main class=\"main\">\n\n    <!-- 儀表板 -->\n    <div class=\"page active\" id=\"page-dashboard\">\n      <div class=\"page-hdr\"><div><div class=\"page-title\">總覽儀表板</div><div class=\"page-sub\">受洗資料統計概覽</div></div></div>\n      <div class=\"cards\" id=\"dashCards\"></div>\n      <div style=\"font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px\">⛪ 各分堂受洗人數</div>\n      <div class=\"branch-grid\" id=\"branchGrid\"></div>\n      <div class=\"grid2\">\n        <div class=\"box\"><div class=\"box-title\">📅 近10屆受洗人數</div><div id=\"batchChart\"></div></div>\n        <div class=\"box\"><div class=\"box-title\">✅ 待辦事項完成率</div><div id=\"todoChart\"></div></div>\n      </div>\n      <div class=\"grid2\">\n        <div class=\"box\"><div class=\"box-title\">🚻 性別分布</div><div id=\"genderChart\"></div></div>\n        <div class=\"box\"><div class=\"box-title\">🙏 受洗方式</div><div id=\"typeChart\"></div></div>\n      </div>\n    </div>\n\n    <!-- 受洗名單 -->\n    <div class=\"page\" id=\"page-list\">\n      <div class=\"page-hdr\">\n        <div><div class=\"page-title\">受洗名單</div><div class=\"page-sub\">所有受洗者資料查詢</div></div>\n        <button class=\"btn btn-green\" onclick=\"exportCSV(filtered,'受洗名單')\">📥 匯出 CSV</button>\n      </div>\n      <div class=\"fbar\">\n        <div class=\"fg\"><label>屆數</label><select id=\"fBatch\" onchange=\"applyFilter()\"><option value=\"\">全部屆數</option></select></div>\n        <div class=\"fg\"><label>分堂</label><select id=\"fBranch\" onchange=\"applyFilter()\"><option value=\"\">全部分堂</option><option>北大</option><option>桃園</option><option>幸福</option><option>卓越大學</option><option>飛航</option><option>溫哥華</option></select></div>\n        <div class=\"fg\"><label>區</label><select id=\"fDist\" onchange=\"applyFilter()\"><option value=\"\">全部</option></select></div>\n        <div class=\"fg\"><label>性別</label><select id=\"fGender\" onchange=\"applyFilter()\"><option value=\"\">全部</option><option>男</option><option>女</option></select></div>\n        <div class=\"fg\"><label>姓名</label><input type=\"text\" id=\"fName\" placeholder=\"輸入姓名...\" oninput=\"applyFilter()\" style=\"min-width:130px\"></div>\n        <button class=\"btn btn-gray\" onclick=\"clearFilter()\">✕ 清除</button>\n      </div>\n      <div class=\"twrap\">\n        <div class=\"tmeta\"><span>共找到 <strong id=\"rCount\">-</strong> 筆</span><span id=\"pagInfo\"></span></div>\n        <div class=\"tscroll\">\n          <table>\n            <thead><tr><th>屆數</th><th>編號</th><th>姓名</th><th>性別</th><th>受洗日期</th><th>年齡</th><th>區</th><th>大家</th><th>小家</th><th>教會</th><th>電話</th><th>📷</th><th>📖</th><th>📜</th><th>📑</th><th>操作</th></tr></thead>\n            <tbody id=\"tBody\"></tbody>\n          </table>\n        </div>\n        <div class=\"pag\"><div class=\"pag-info\" id=\"pagInfo\"></div><div class=\"pag-btns\" id=\"pagBtns\"></div></div>\n      </div>\n    </div>\n\n    <!-- 待辦 -->\n    <div class=\"page\" id=\"page-todo\">\n      <div class=\"page-hdr\">\n        <div><div class=\"page-title\">待辦追蹤</div><div class=\"page-sub\">自動列出所有未完成事項</div></div>\n        <button class=\"btn btn-green\" onclick=\"exportCSV(getTodo(),'待辦清單')\">📥 匯出</button>\n      </div>\n      <div class=\"chips\">\n        <div class=\"chip on\" onclick=\"setTodoF('all',this)\">全部待辦</div>\n        <div class=\"chip ph\" onclick=\"setTodoF('ph',this)\">📷 未交照片</div>\n        <div class=\"chip bi\" onclick=\"setTodoF('bi',this)\">📖 未領聖經</div>\n        <div class=\"chip ce\" onclick=\"setTodoF('ce',this)\">📜 未領證書</div>\n        <div class=\"chip pa\" onclick=\"setTodoF('pa',this)\">📑 未繳紙本</div>\n      </div>\n      <div class=\"twrap\">\n        <div class=\"tmeta\"><span>共 <strong id=\"todoCount\">-</strong> 人有未完成事項</span></div>\n        <div class=\"tscroll\">\n          <table>\n            <thead><tr><th>屆數</th><th>編號</th><th>姓名</th><th>電話</th><th>教會</th><th>小家</th><th>📷</th><th>📖</th><th>📜</th><th>📑</th><th>待辦項目</th></tr></thead>\n            <tbody id=\"todoBody\"></tbody>\n          </table>\n        </div>\n      </div>\n    </div>\n\n    <!-- 統計 -->\n    <div class=\"page\" id=\"page-stats\">\n      <div class=\"page-hdr\"><div><div class=\"page-title\">統計報表</div><div class=\"page-sub\">各屆詳細統計數據</div></div></div>\n      <div class=\"twrap\"><div class=\"tscroll\">\n        <table>\n          <thead><tr><th>屆數</th><th>總人數</th><th>男</th><th>女</th><th>已交照片</th><th>照片率</th><th>已領聖經</th><th>聖經率</th><th>已領證書</th><th>證書率</th><th>已繳紙本</th><th>紙本率</th></tr></thead>\n          <tbody id=\"statsBody\"></tbody>\n        </table>\n      </div></div>\n    </div>\n\n    <!-- 匯出工具 -->\n    <div class=\"page\" id=\"page-export\">\n      <div class=\"page-hdr\"><div><div class=\"page-title\">匯出工具</div><div class=\"page-sub\">名牌貼紙 / 自訂欄位 / 受洗證書</div></div></div>\n      <div class=\"expgrid\">\n        <div class=\"expcard gold\">\n          <h4>🏷️ 名牌貼紙</h4>\n          <p>依屆數產生可列印的名牌貼紙<br>包含：屆數、組別、牧區、編號、姓名</p>\n          <button class=\"btn btn-gold\" onclick=\"document.getElementById('sPanel').style.display='block';document.getElementById('xPanel').style.display='none';document.getElementById('cPanel').style.display='none'\">🏷️ 開始產生</button>\n        </div>\n        <div class=\"expcard purple\">\n          <h4>📋 自訂欄位匯出</h4>\n          <p>勾選需要的欄位，產生可列印的表格或匯出 CSV</p>\n          <button class=\"btn btn-purple\" onclick=\"document.getElementById('xPanel').style.display='block';document.getElementById('sPanel').style.display='none';document.getElementById('cPanel').style.display='none'\">📋 選擇欄位</button>\n        </div>\n        <div class=\"expcard\">\n          <h4>📜 受洗證書</h4>\n          <p>依屆數批次產生受洗證書，可直接列印</p>\n          <button class=\"btn btn-navy\" onclick=\"document.getElementById('cPanel').style.display='block';document.getElementById('sPanel').style.display='none';document.getElementById('xPanel').style.display='none';updateCertPreview()\">📜 產生證書</button>\n        </div>\n        <div class=\"expcard green\">\n          <h4>📥 資料匯出 CSV</h4>\n          <p>匯出各類清單為 CSV 檔案</p>\n          <div style=\"display:flex;flex-direction:column;gap:8px;margin-top:4px\">\n            <button class=\"btn btn-green\" style=\"justify-content:center\" onclick=\"exportCSV(ALL,'全部受洗名單')\">全部名單</button>\n            <button class=\"btn btn-red\" style=\"justify-content:center\" onclick=\"exportCSV(ALL.filter(function(r){return r.photoSubmitted!=='是'}),'未交照片')\">未交照片</button>\n            <button class=\"btn btn-navy\" style=\"justify-content:center\" onclick=\"exportCSV(ALL.filter(function(r){return r.bibleReceived!=='是'}),'未領聖經')\">未領聖經</button>\n            <button class=\"btn btn-purple\" style=\"justify-content:center\" onclick=\"exportCSV(ALL.filter(function(r){return r.certReceived!=='是'}),'未領證書')\">未領證書</button>\n          </div>\n        </div>\n      </div>\n\n      <div id=\"sPanel\" style=\"display:none\">\n        <div class=\"panel\"><div class=\"panel-title\">🏷️ 名牌貼紙設定</div>\n          <div style=\"display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px\">\n            <div class=\"fg\"><label>屆數</label><select id=\"sBatch\"><option value=\"\">全部</option></select></div>\n            <div class=\"fg\"><label>分堂</label><select id=\"sBranch\"><option value=\"\">全部</option><option>北大</option><option>桃園</option><option>幸福</option><option>卓越大學</option><option>飛航</option><option>溫哥華</option></select></div>\n            <button class=\"btn btn-gray\" onclick=\"previewStickers()\">預覽</button>\n            <button class=\"btn btn-gold\" onclick=\"printStickers()\">🖨️ 列印</button>\n          </div>\n          <div id=\"sPreview\" style=\"color:var(--text-muted);font-size:13px\">請選擇條件後點「預覽」</div>\n        </div>\n      </div>\n\n      <div id=\"xPanel\" style=\"display:none\">\n        <div class=\"panel\"><div class=\"panel-title\">📋 選擇要匯出的欄位</div>\n          <div class=\"col-picker\" id=\"colPicker\"></div>\n          <div style=\"display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-top:16px\">\n            <div class=\"fg\"><label>屆數</label><select id=\"xBatch\"><option value=\"\">全部</option></select></div>\n            <div class=\"fg\"><label>分堂</label><select id=\"xBranch\"><option value=\"\">全部</option><option>北大</option><option>桃園</option><option>幸福</option><option>卓越大學</option><option>飛航</option><option>溫哥華</option></select></div>\n            <button class=\"btn btn-purple\" onclick=\"printCustomTable()\">🖨️ 列印表格</button>\n            <button class=\"btn btn-green\" onclick=\"exportCustomCSV()\">📥 匯出 CSV</button>\n          </div>\n        </div>\n      </div>\n\n      <div id=\"cPanel\" style=\"display:none\">\n        <div class=\"panel\"><div class=\"panel-title\">📜 受洗證書設定</div>\n          <div style=\"display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px\">\n            <div class=\"fg\"><label>屆數</label><select id=\"cBatch\" onchange=\"updateCertPreview()\"><option value=\"\">全部</option></select></div>\n            <div class=\"fg\"><label>分堂</label><select id=\"cBranch\" onchange=\"updateCertPreview()\"><option value=\"\">全部</option><option>北大</option><option>桃園</option><option>幸福</option><option>卓越大學</option><option>飛航</option><option>溫哥華</option></select></div>\n            <button class=\"btn btn-navy\" onclick=\"printCerts()\">🖨️ 列印所有證書</button>\n          </div>\n          <div style=\"font-size:13px;color:var(--text-muted);margin-bottom:8px\">預覽（第一張）：</div>\n          <div id=\"cPreview\"></div>\n        </div>\n      </div>\n    </div>\n\n  </main>\n</div>\n\n<div class=\"overlay\" id=\"overlay\" onclick=\"closeModal(event)\">\n  <div class=\"modal\">\n    <div class=\"mhdr\"><h3 id=\"mName\">-</h3><button class=\"mclose\" onclick=\"closeM()\">✕</button></div>\n    <div class=\"mbody\" id=\"mBody\"></div>\n  </div>\n</div>\n";</script>
+<script>window._originalBody = `
+<div class="header">
+  <div class="header-title"><span class="cross">✝</span>卓越北大教會 — 受洗管理系統</div>
+  <div class="hstats">
+    <div class="hstat"><strong id="hTotal">-</strong>總人數</div>
+    <div class="hstat"><strong id="hPhoto">-</strong>未交照片</div>
+    <div class="hstat"><strong id="hBible">-</strong>未領聖經</div>
+    <div class="hstat"><strong id="hCert">-</strong>未領證書</div>
+  </div>
+</div>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-label">主要功能</div>
+    <div class="nav-btn active" id="nav-dashboard" onclick="showPage('dashboard')"><span class="nav-icon">📊</span>總覽儀表板</div>
+    <div class="nav-btn" id="nav-list" onclick="showPage('list')"><span class="nav-icon">📋</span>受洗名單</div>
+    <div class="nav-btn" id="nav-todo" onclick="showPage('todo')"><span class="nav-icon">⚠️</span>待辦追蹤<span class="nav-badge" id="todoBadge">-</span></div>
+    <div class="sidebar-div"></div>
+    <div class="sidebar-label">統計與匯出</div>
+    <div class="nav-btn" id="nav-stats" onclick="showPage('stats')"><span class="nav-icon">📈</span>統計報表</div>
+    <div class="nav-btn" id="nav-export" onclick="showPage('export')"><span class="nav-icon">📤</span>匯出工具</div>
+  </nav>
+  <main class="main">
+
+    <!-- 儀表板 -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-hdr"><div><div class="page-title">總覽儀表板</div><div class="page-sub">受洗資料統計概覽</div></div></div>
+      <div class="cards" id="dashCards"></div>
+      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px">⛪ 各分堂受洗人數</div>
+      <div class="branch-grid" id="branchGrid"></div>
+      <div class="grid2">
+        <div class="box"><div class="box-title">📅 近10屆受洗人數</div><div id="batchChart"></div></div>
+        <div class="box"><div class="box-title">✅ 待辦事項完成率</div><div id="todoChart"></div></div>
+      </div>
+      <div class="grid2">
+        <div class="box"><div class="box-title">🚻 性別分布</div><div id="genderChart"></div></div>
+        <div class="box"><div class="box-title">🙏 受洗方式</div><div id="typeChart"></div></div>
+      </div>
+    </div>
+
+    <!-- 受洗名單 -->
+    <div class="page" id="page-list">
+      <div class="page-hdr">
+        <div><div class="page-title">受洗名單</div><div class="page-sub">所有受洗者資料查詢</div></div>
+        <button class="btn btn-green" onclick="exportCSV(filtered,'受洗名單')">📥 匯出 CSV</button>
+      </div>
+      <div class="fbar">
+        <div class="fg"><label>屆數</label><select id="fBatch" onchange="applyFilter()"><option value="">全部屆數</option></select></div>
+        <div class="fg"><label>分堂</label><select id="fBranch" onchange="applyFilter()"><option value="">全部分堂</option><option>北大</option><option>桃園</option><option>幸福</option><option>卓越大學</option><option>飛航</option><option>溫哥華</option></select></div>
+        <div class="fg"><label>區</label><select id="fDist" onchange="applyFilter()"><option value="">全部</option></select></div>
+        <div class="fg"><label>性別</label><select id="fGender" onchange="applyFilter()"><option value="">全部</option><option>男</option><option>女</option></select></div>
+        <div class="fg"><label>姓名</label><input type="text" id="fName" placeholder="輸入姓名..." oninput="applyFilter()" style="min-width:130px"></div>
+        <button class="btn btn-gray" onclick="clearFilter()">✕ 清除</button>
+      </div>
+      <div class="twrap">
+        <div class="tmeta"><span>共找到 <strong id="rCount">-</strong> 筆</span><span id="pagInfo"></span></div>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>屆數</th><th>編號</th><th>姓名</th><th>性別</th><th>受洗日期</th><th>年齡</th><th>區</th><th>大家</th><th>小家</th><th>教會</th><th>電話</th><th>📷</th><th>📖</th><th>📜</th><th>📑</th><th>操作</th></tr></thead>
+            <tbody id="tBody"></tbody>
+          </table>
+        </div>
+        <div class="pag"><div class="pag-info" id="pagInfo"></div><div class="pag-btns" id="pagBtns"></div></div>
+      </div>
+    </div>
+
+    <!-- 待辦 -->
+    <div class="page" id="page-todo">
+      <div class="page-hdr">
+        <div><div class="page-title">待辦追蹤</div><div class="page-sub">自動列出所有未完成事項</div></div>
+        <button class="btn btn-green" onclick="exportCSV(getTodo(),'待辦清單')">📥 匯出</button>
+      </div>
+      <div class="chips">
+        <div class="chip on" onclick="setTodoF('all',this)">全部待辦</div>
+        <div class="chip ph" onclick="setTodoF('ph',this)">📷 未交照片</div>
+        <div class="chip bi" onclick="setTodoF('bi',this)">📖 未領聖經</div>
+        <div class="chip ce" onclick="setTodoF('ce',this)">📜 未領證書</div>
+        <div class="chip pa" onclick="setTodoF('pa',this)">📑 未繳紙本</div>
+      </div>
+      <div class="twrap">
+        <div class="tmeta"><span>共 <strong id="todoCount">-</strong> 人有未完成事項</span></div>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>屆數</th><th>編號</th><th>姓名</th><th>電話</th><th>教會</th><th>小家</th><th>📷</th><th>📖</th><th>📜</th><th>📑</th><th>待辦項目</th></tr></thead>
+            <tbody id="todoBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 統計 -->
+    <div class="page" id="page-stats">
+      <div class="page-hdr"><div><div class="page-title">統計報表</div><div class="page-sub">各屆詳細統計數據</div></div></div>
+      <div class="twrap"><div class="tscroll">
+        <table>
+          <thead><tr><th>屆數</th><th>總人數</th><th>男</th><th>女</th><th>已交照片</th><th>照片率</th><th>已領聖經</th><th>聖經率</th><th>已領證書</th><th>證書率</th><th>已繳紙本</th><th>紙本率</th></tr></thead>
+          <tbody id="statsBody"></tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- 匯出工具 -->
+    <div class="page" id="page-export">
+      <div class="page-hdr"><div><div class="page-title">匯出工具</div><div class="page-sub">名牌貼紙 / 自訂欄位 / 受洗證書</div></div></div>
+      <div class="expgrid">
+        <div class="expcard gold">
+          <h4>🏷️ 名牌貼紙</h4>
+          <p>依屆數產生可列印的名牌貼紙<br>包含：屆數、組別、牧區、編號、姓名</p>
+          <button class="btn btn-gold" onclick="document.getElementById('sPanel').style.display='block';document.getElementById('xPanel').style.display='none';document.getElementById('cPanel').style.display='none'">🏷️ 開始產生</button>
+        </div>
+        <div class="expcard purple">
+          <h4>📋 自訂欄位匯出</h4>
+          <p>勾選需要的欄位，產生可列印的表格或匯出 CSV</p>
+          <button class="btn btn-purple" onclick="document.getElementById('xPanel').style.display='block';document.getElementById('sPanel').style.display='none';document.getElementById('cPanel').style.display='none'">📋 選擇欄位</button>
+        </div>
+        <div class="expcard">
+          <h4>📜 受洗證書</h4>
+          <p>依屆數批次產生受洗證書，可直接列印</p>
+          <button class="btn btn-navy" onclick="document.getElementById('cPanel').style.display='block';document.getElementById('sPanel').style.display='none';document.getElementById('xPanel').style.display='none';updateCertPreview()">📜 產生證書</button>
+        </div>
+        <div class="expcard green">
+          <h4>📥 資料匯出 CSV</h4>
+          <p>匯出各類清單為 CSV 檔案</p>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+            <button class="btn btn-green" style="justify-content:center" onclick="exportCSV(ALL,'全部受洗名單')">全部名單</button>
+            <button class="btn btn-red" style="justify-content:center" onclick="exportCSV(ALL.filter(function(r){return r.photoSubmitted!=='是'}),'未交照片')">未交照片</button>
+            <button class="btn btn-navy" style="justify-content:center" onclick="exportCSV(ALL.filter(function(r){return r.bibleReceived!=='是'}),'未領聖經')">未領聖經</button>
+            <button class="btn btn-purple" style="justify-content:center" onclick="exportCSV(ALL.filter(function(r){return r.certReceived!=='是'}),'未領證書')">未領證書</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="sPanel" style="display:none">
+        <div class="panel"><div class="panel-title">🏷️ 名牌貼紙設定</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px">
+            <div class="fg"><label>屆數</label><select id="sBatch"><option value="">全部</option></select></div>
+            <div class="fg"><label>分堂</label><select id="sBranch"><option value="">全部</option><option>北大</option><option>桃園</option><option>幸福</option><option>卓越大學</option><option>飛航</option><option>溫哥華</option></select></div>
+            <button class="btn btn-gray" onclick="previewStickers()">預覽</button>
+            <button class="btn btn-gold" onclick="printStickers()">🖨️ 列印</button>
+          </div>
+          <div id="sPreview" style="color:var(--text-muted);font-size:13px">請選擇條件後點「預覽」</div>
+        </div>
+      </div>
+
+      <div id="xPanel" style="display:none">
+        <div class="panel"><div class="panel-title">📋 選擇要匯出的欄位</div>
+          <div class="col-picker" id="colPicker"></div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-top:16px">
+            <div class="fg"><label>屆數</label><select id="xBatch"><option value="">全部</option></select></div>
+            <div class="fg"><label>分堂</label><select id="xBranch"><option value="">全部</option><option>北大</option><option>桃園</option><option>幸福</option><option>卓越大學</option><option>飛航</option><option>溫哥華</option></select></div>
+            <button class="btn btn-purple" onclick="printCustomTable()">🖨️ 列印表格</button>
+            <button class="btn btn-green" onclick="exportCustomCSV()">📥 匯出 CSV</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="cPanel" style="display:none">
+        <div class="panel"><div class="panel-title">📜 受洗證書設定</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px">
+            <div class="fg"><label>屆數</label><select id="cBatch" onchange="updateCertPreview()"><option value="">全部</option></select></div>
+            <div class="fg"><label>分堂</label><select id="cBranch" onchange="updateCertPreview()"><option value="">全部</option><option>北大</option><option>桃園</option><option>幸福</option><option>卓越大學</option><option>飛航</option><option>溫哥華</option></select></div>
+            <button class="btn btn-navy" onclick="printCerts()">🖨️ 列印所有證書</button>
+          </div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px">預覽（第一張）：</div>
+          <div id="cPreview"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="mhdr"><h3 id="mName">-</h3><button class="mclose" onclick="closeM()">✕</button></div>
+    <div class="mbody" id="mBody"></div>
+  </div>
+</div>
+`;</script>
 <script>
 var ALL = [];
 var filtered = [];
 var CG = {"北大":["北大","卓越北大行道會","臺北大學教會","北大學青區","北大師母區","北大社青區"],"桃園":["桃園","卓越桃園行道會"],"幸福":["台北幸福","卓越台北幸福行道會","幸福社學青區"],"卓越大學":["卓越大學","卓越大學教會"],"飛航":["飛航","卓越飛航行道會","飛航牧區","卓越飛航福音中心"],"溫哥華":["溫哥華","卓越溫哥華行道會"]};
 
 function parseGviz(text){
-  var cleaned = text.replace(/[\s\S]*setResponse\(/, '').replace(/\);\s*$/, '');
-  var data = JSON.parse(cleaned);
-  var cols = data.table.cols.map(function(c){ return c.label; });
+  var m = text.match(/setResponse\(([\s\S]+?)\)\s*;?\s*$/);
+  if(!m) throw new Error('無法解析回應');
+  var data = JSON.parse(m[1]);
+  var cols = data.table.cols.map(function(c){return c.label;});
   return (data.table.rows||[]).map(function(row,i){
     var rec={};
     cols.forEach(function(col,j){
       var cell=row.c?row.c[j]:null;
-      rec[col]=(cell&&cell.v!==null&&cell.v!==undefined)?String(cell.v):'';
+      rec[col]=(cell&&cell.v!=null)?String(cell.v):'';
     });
-    return {id:i+1,batch:rec['屆數']||'',no:rec['編號']||'',district:rec['區']||'',bigGroup:rec['大家']||'',smallGroup:rec['小家']||'',name:rec['姓名']||'',gender:rec['性別']||'',baptismDate:rec['受洗日期']||'',birthday:rec['生日']||'',age:rec['受洗年齡']||'',phoneH:rec['電話(H)']||'',phoneM:rec['電話(M)']||'',address:rec['地址']||'',email:rec['E_MAIL']||'',baptismType:rec['受洗方式']||'',tookClass:rec['是否上過受洗課程']||'',paperSubmitted:rec['受洗證書申請繳交']||rec['受洗證書申請繳交']||'',paperDate:rec['申請繳交日期']||rec['申請繳交日期']||'',photoSubmitted:rec['已交照片']||'',bibleReceived:rec['聖經領取']||'',certReceived:rec['受洗證書領取']||'',church:rec['教會']||'',maritalStatus:rec['婚姻狀況']||'',couplesBaptism:rec['本次是否\n夫妻同受洗']||rec['本次是否夫妻同受洗']||'',spouseName:rec['您的丈夫/妻子姓名']||'',notes:rec['備註']||''};
+    return {id:i+1,batch:rec['屆數']||'',no:rec['編號']||'',district:rec['區']||'',bigGroup:rec['大家']||'',smallGroup:rec['小家']||'',name:rec['姓名']||'',gender:rec['性別']||'',baptismDate:rec['受洗日期']||'',birthday:rec['生日']||'',age:rec['受洗年齡']||'',phoneH:rec['電話(H)']||'',phoneM:rec['電話(M)']||'',address:rec['地址']||'',email:rec['E_MAIL']||'',baptismType:rec['受洗方式']||'',tookClass:rec['是否上過受洗課程']||'',paperSubmitted:rec['受洗證書申請繳交']||'',paperDate:rec['申請繳交日期']||'',photoSubmitted:rec['已交照片']||'',bibleReceived:rec['聖經領取']||'',certReceived:rec['受洗證書領取']||'',church:rec['教會']||'',maritalStatus:rec['婚姻狀況']||'',couplesBaptism:rec['本次是否\n夫妻同受洗']||rec['本次是否夫妻同受洗']||'',spouseName:rec['您的丈夫/妻子姓名']||'',notes:rec['備註']||''};
   });
 }
 
 
-// CG defined in loader
+// CG_SKIP {"北大": ["北大", "卓越北大行道會", "臺北大學教會", "北大學青區", "北大師母區", "北大社青區"], "桃園": ["桃園", "卓越桃園行道會"], "幸福": ["台北幸福", "卓越台北幸福行道會", "幸福社學青區"], "卓越大學": ["卓越大學", "卓越大學教會"], "飛航": ["飛航", "卓越飛航行道會", "飛航牧區"], "溫哥華": ["溫哥華", "卓越溫哥華行道會"]};
 var ALL = JSON.parse(document.getElementById('bd').textContent).records;
 var filtered = ALL.slice();
 var curPage = 1;
@@ -41,7 +219,7 @@ var COLS = [
   {k:'address',l:'地址'},{k:'email',l:'Email'},{k:'baptismType',l:'受洗方式'},
   {k:'tookClass',l:'是否上課'},{k:'photoSubmitted',l:'已交照片'},
   {k:'bibleReceived',l:'聖經領取'},{k:'certReceived',l:'受洗證書'},
-  {k:'paperSubmitted',l:'受洗證書申請繳交'},{k:'maritalStatus',l:'婚姻狀況'},
+  {k:'paperSubmitted',l:'紙本繳交'},{k:'maritalStatus',l:'婚姻狀況'},
   {k:'couplesBaptism',l:'夫妻同受洗'}
 ];
 
@@ -312,7 +490,7 @@ function showDetail(id){
     msec('基本資料',[['屆數',(r.batch||'-')+'屆'],['編號',r.no||'-'],['受洗日期',r.baptismDate||'-'],['受洗年齡',r.age!=null?r.age+'歲':'-'],['生日',r.birthday||'-'],['受洗方式',r.baptismType||'-'],['是否上課',r.tookClass||'-'],['婚姻狀況',r.maritalStatus||'-']])+
     msec('所屬單位',[['分堂',getBranch(r)],['教會',r.church||'-'],['區',r.district||'-'],['大家',r.bigGroup||'-'],['小家',r.smallGroup||'-']])+
     msec('聯絡資料',[['手機',r.phoneM||'-'],['電話H',r.phoneH||'-'],['Email',r.email||'-'],['地址',r.address||'-']])+
-    msec('待辦狀態',[['已交照片',bdg(r.photoSubmitted)],['聖經領取',bdg(r.bibleReceived)],['受洗證書',bdg(r.certReceived)],['受洗證書申請繳交',bdg(r.paperSubmitted)],['申請繳交日期',r.paperDate||'-']]);
+    msec('待辦狀態',[['已交照片',bdg(r.photoSubmitted)],['聖經領取',bdg(r.bibleReceived)],['受洗證書',bdg(r.certReceived)],['紙本繳交',bdg(r.paperSubmitted)],['紙本繳交日期',r.paperDate||'-']]);
   document.getElementById('overlay').classList.add('open');
 }
 function msec(title,fields){
@@ -371,13 +549,11 @@ function renderColPicker(){
   var html='';
   COLS.forEach(function(c){
     var on=selCols.indexOf(c.k)!==-1;
-    var cls='col-chip'+(on?' on':'');
-    html+='<div class="'+cls+'" onclick="toggleCol(this)" data-key="'+c.k+'">'+c.l+'</div>';
+    html+='<div class="col-chip'+(on?' on':'')+'" onclick="toggleCol(''+c.k+'',this)">'+c.l+'</div>';
   });
   document.getElementById('colPicker').innerHTML=html;
 }
-function toggleCol(el){
-  var key=el.getAttribute('data-key');
+function toggleCol(key,el){
   var i=selCols.indexOf(key);
   if(i!==-1){selCols.splice(i,1);el.classList.remove('on');}
   else{selCols.push(key);el.classList.add('on');}
@@ -476,20 +652,32 @@ function exportCSV(data,name){ doExportCSV(data,COLS,name); }
 
 
 window.onload = function(){
-  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;font-family:Microsoft JhengHei,PingFang TC,sans-serif;background:#faf7f2"><div style="font-size:48px;color:#c9a84c;margin-bottom:16px">✝</div><div style="font-size:18px;color:#1a2e4a;font-weight:700;margin-bottom:8px">卓越北大教會 受洗管理系統</div><div style="font-size:13px;color:#5a6a7a;margin-bottom:20px">正在載入資料...</div><div style="width:200px;height:4px;background:#d4c9b8;border-radius:2px;overflow:hidden"><div style="height:100%;background:#2c6fad;border-radius:2px;animation:ld 1.5s ease-in-out infinite"></div></div></div><style>@keyframes ld{0%{width:10%}50%{width:80%}100%{width:10%}}</style>';
+  // 先顯示載入畫面
+  document.body.style.display='flex';
+  document.body.style.alignItems='center';
+  document.body.style.justifyContent='center';
+  document.body.style.height='100vh';
+  document.body.style.flexDirection='column';
+  document.body.style.fontFamily='Microsoft JhengHei,PingFang TC,sans-serif';
+  document.body.style.background='#faf7f2';
+  document.body.innerHTML='<div style="text-align:center"><div style="font-size:48px;color:#c9a84c;margin-bottom:16px">✝</div><div style="font-size:18px;color:#1a2e4a;font-weight:700;margin-bottom:8px">卓越北大教會 受洗管理系統</div><div style="font-size:13px;color:#5a6a7a;margin-bottom:20px">正在載入資料...</div><div style="width:200px;height:4px;background:#d4c9b8;border-radius:2px;overflow:hidden;margin:0 auto"><div style="height:100%;background:#2c6fad;animation:ld 1.5s ease-in-out infinite"></div></div></div><style>@keyframes ld{0%{width:10%}50%{width:80%}100%{width:10%}}</style>';
+  
   fetch('https://docs.google.com/spreadsheets/d/10nL_h-DmAcJBQKssdVzgiLtK3VuS_1wqVRkign0pS1U/gviz/tq?tqx=out:json')
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
     .then(function(text){
       ALL = parseGviz(text);
       filtered = ALL.slice();
-      document.body.innerHTML = window._htmlBody;
+      // 還原頁面
+      document.body.removeAttribute('style');
+      document.body.innerHTML = window._originalBody;
       initSystem();
     })
     .catch(function(e){
-      document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;font-family:Microsoft JhengHei,sans-serif;background:#faf7f2;gap:12px"><div style="font-size:36px">⚠️</div><div style="font-size:15px;color:#c0392b;font-weight:700">載入失敗</div><div style="font-size:12px;color:#5a6a7a;max-width:360px;text-align:center">'+e.message+'</div><button onclick="location.reload()" style="padding:8px 20px;background:#1a2e4a;color:white;border:none;border-radius:8px;cursor:pointer">🔄 重新載入</button></div>';
+      document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:12px;font-family:Microsoft JhengHei,sans-serif;background:#faf7f2"><div style="font-size:36px">⚠️</div><div style="font-size:15px;color:#c0392b;font-weight:700">載入失敗</div><div style="font-size:12px;color:#5a6a7a;max-width:360px;text-align:center">'+e.message+'</div><button onclick="location.reload()" style="padding:8px 20px;background:#1a2e4a;color:white;border:none;border-radius:8px;cursor:pointer">🔄 重新載入</button></div>';
     });
 };
 </script>
+
 <style>
 :root{--navy:#1a2e4a;--navy2:#243b56;--blue:#2c6fad;--gold:#c9a84c;--gold-light:#e8c97e;
 --cream:#faf7f2;--cream2:#f2ede4;--text:#1a1a2e;--text-muted:#5a6a7a;
@@ -618,6 +806,183 @@ td{padding:9px 12px;white-space:nowrap;vertical-align:middle}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 </style>
 </head>
-<body>
-</body>
-</html>
+<body style="display:none">
+<div class="header">
+  <div class="header-title"><span class="cross">✝</span>卓越北大教會 — 受洗管理系統</div>
+  <div class="hstats">
+    <div class="hstat"><strong id="hTotal">-</strong>總人數</div>
+    <div class="hstat"><strong id="hPhoto">-</strong>未交照片</div>
+    <div class="hstat"><strong id="hBible">-</strong>未領聖經</div>
+    <div class="hstat"><strong id="hCert">-</strong>未領證書</div>
+  </div>
+</div>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-label">主要功能</div>
+    <div class="nav-btn active" id="nav-dashboard" onclick="showPage('dashboard')"><span class="nav-icon">📊</span>總覽儀表板</div>
+    <div class="nav-btn" id="nav-list" onclick="showPage('list')"><span class="nav-icon">📋</span>受洗名單</div>
+    <div class="nav-btn" id="nav-todo" onclick="showPage('todo')"><span class="nav-icon">⚠️</span>待辦追蹤<span class="nav-badge" id="todoBadge">-</span></div>
+    <div class="sidebar-div"></div>
+    <div class="sidebar-label">統計與匯出</div>
+    <div class="nav-btn" id="nav-stats" onclick="showPage('stats')"><span class="nav-icon">📈</span>統計報表</div>
+    <div class="nav-btn" id="nav-export" onclick="showPage('export')"><span class="nav-icon">📤</span>匯出工具</div>
+  </nav>
+  <main class="main">
+
+    <!-- 儀表板 -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-hdr"><div><div class="page-title">總覽儀表板</div><div class="page-sub">受洗資料統計概覽</div></div></div>
+      <div class="cards" id="dashCards"></div>
+      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px">⛪ 各分堂受洗人數</div>
+      <div class="branch-grid" id="branchGrid"></div>
+      <div class="grid2">
+        <div class="box"><div class="box-title">📅 近10屆受洗人數</div><div id="batchChart"></div></div>
+        <div class="box"><div class="box-title">✅ 待辦事項完成率</div><div id="todoChart"></div></div>
+      </div>
+      <div class="grid2">
+        <div class="box"><div class="box-title">🚻 性別分布</div><div id="genderChart"></div></div>
+        <div class="box"><div class="box-title">🙏 受洗方式</div><div id="typeChart"></div></div>
+      </div>
+    </div>
+
+    <!-- 受洗名單 -->
+    <div class="page" id="page-list">
+      <div class="page-hdr">
+        <div><div class="page-title">受洗名單</div><div class="page-sub">所有受洗者資料查詢</div></div>
+        <button class="btn btn-green" onclick="exportCSV(filtered,'受洗名單')">📥 匯出 CSV</button>
+      </div>
+      <div class="fbar">
+        <div class="fg"><label>屆數</label><select id="fBatch" onchange="applyFilter()"><option value="">全部屆數</option></select></div>
+        <div class="fg"><label>分堂</label><select id="fBranch" onchange="applyFilter()"><option value="">全部分堂</option><option>北大</option><option>桃園</option><option>幸福</option><option>卓越大學</option><option>飛航</option><option>溫哥華</option></select></div>
+        <div class="fg"><label>區</label><select id="fDist" onchange="applyFilter()"><option value="">全部</option></select></div>
+        <div class="fg"><label>性別</label><select id="fGender" onchange="applyFilter()"><option value="">全部</option><option>男</option><option>女</option></select></div>
+        <div class="fg"><label>姓名</label><input type="text" id="fName" placeholder="輸入姓名..." oninput="applyFilter()" style="min-width:130px"></div>
+        <button class="btn btn-gray" onclick="clearFilter()">✕ 清除</button>
+      </div>
+      <div class="twrap">
+        <div class="tmeta"><span>共找到 <strong id="rCount">-</strong> 筆</span><span id="pagInfo"></span></div>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>屆數</th><th>編號</th><th>姓名</th><th>性別</th><th>受洗日期</th><th>年齡</th><th>區</th><th>大家</th><th>小家</th><th>教會</th><th>電話</th><th>📷</th><th>📖</th><th>📜</th><th>📑</th><th>操作</th></tr></thead>
+            <tbody id="tBody"></tbody>
+          </table>
+        </div>
+        <div class="pag"><div class="pag-info" id="pagInfo"></div><div class="pag-btns" id="pagBtns"></div></div>
+      </div>
+    </div>
+
+    <!-- 待辦 -->
+    <div class="page" id="page-todo">
+      <div class="page-hdr">
+        <div><div class="page-title">待辦追蹤</div><div class="page-sub">自動列出所有未完成事項</div></div>
+        <button class="btn btn-green" onclick="exportCSV(getTodo(),'待辦清單')">📥 匯出</button>
+      </div>
+      <div class="chips">
+        <div class="chip on" onclick="setTodoF('all',this)">全部待辦</div>
+        <div class="chip ph" onclick="setTodoF('ph',this)">📷 未交照片</div>
+        <div class="chip bi" onclick="setTodoF('bi',this)">📖 未領聖經</div>
+        <div class="chip ce" onclick="setTodoF('ce',this)">📜 未領證書</div>
+        <div class="chip pa" onclick="setTodoF('pa',this)">📑 未繳紙本</div>
+      </div>
+      <div class="twrap">
+        <div class="tmeta"><span>共 <strong id="todoCount">-</strong> 人有未完成事項</span></div>
+        <div class="tscroll">
+          <table>
+            <thead><tr><th>屆數</th><th>編號</th><th>姓名</th><th>電話</th><th>教會</th><th>小家</th><th>📷</th><th>📖</th><th>📜</th><th>📑</th><th>待辦項目</th></tr></thead>
+            <tbody id="todoBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 統計 -->
+    <div class="page" id="page-stats">
+      <div class="page-hdr"><div><div class="page-title">統計報表</div><div class="page-sub">各屆詳細統計數據</div></div></div>
+      <div class="twrap"><div class="tscroll">
+        <table>
+          <thead><tr><th>屆數</th><th>總人數</th><th>男</th><th>女</th><th>已交照片</th><th>照片率</th><th>已領聖經</th><th>聖經率</th><th>已領證書</th><th>證書率</th><th>已繳紙本</th><th>紙本率</th></tr></thead>
+          <tbody id="statsBody"></tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- 匯出工具 -->
+    <div class="page" id="page-export">
+      <div class="page-hdr"><div><div class="page-title">匯出工具</div><div class="page-sub">名牌貼紙 / 自訂欄位 / 受洗證書</div></div></div>
+      <div class="expgrid">
+        <div class="expcard gold">
+          <h4>🏷️ 名牌貼紙</h4>
+          <p>依屆數產生可列印的名牌貼紙<br>包含：屆數、組別、牧區、編號、姓名</p>
+          <button class="btn btn-gold" onclick="document.getElementById('sPanel').style.display='block';document.getElementById('xPanel').style.display='none';document.getElementById('cPanel').style.display='none'">🏷️ 開始產生</button>
+        </div>
+        <div class="expcard purple">
+          <h4>📋 自訂欄位匯出</h4>
+          <p>勾選需要的欄位，產生可列印的表格或匯出 CSV</p>
+          <button class="btn btn-purple" onclick="document.getElementById('xPanel').style.display='block';document.getElementById('sPanel').style.display='none';document.getElementById('cPanel').style.display='none'">📋 選擇欄位</button>
+        </div>
+        <div class="expcard">
+          <h4>📜 受洗證書</h4>
+          <p>依屆數批次產生受洗證書，可直接列印</p>
+          <button class="btn btn-navy" onclick="document.getElementById('cPanel').style.display='block';document.getElementById('sPanel').style.display='none';document.getElementById('xPanel').style.display='none';updateCertPreview()">📜 產生證書</button>
+        </div>
+        <div class="expcard green">
+          <h4>📥 資料匯出 CSV</h4>
+          <p>匯出各類清單為 CSV 檔案</p>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+            <button class="btn btn-green" style="justify-content:center" onclick="exportCSV(ALL,'全部受洗名單')">全部名單</button>
+            <button class="btn btn-red" style="justify-content:center" onclick="exportCSV(ALL.filter(function(r){return r.photoSubmitted!=='是'}),'未交照片')">未交照片</button>
+            <button class="btn btn-navy" style="justify-content:center" onclick="exportCSV(ALL.filter(function(r){return r.bibleReceived!=='是'}),'未領聖經')">未領聖經</button>
+            <button class="btn btn-purple" style="justify-content:center" onclick="exportCSV(ALL.filter(function(r){return r.certReceived!=='是'}),'未領證書')">未領證書</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="sPanel" style="display:none">
+        <div class="panel"><div class="panel-title">🏷️ 名牌貼紙設定</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px">
+            <div class="fg"><label>屆數</label><select id="sBatch"><option value="">全部</option></select></div>
+            <div class="fg"><label>分堂</label><select id="sBranch"><option value="">全部</option><option>北大</option><option>桃園</option><option>幸福</option><option>卓越大學</option><option>飛航</option><option>溫哥華</option></select></div>
+            <button class="btn btn-gray" onclick="previewStickers()">預覽</button>
+            <button class="btn btn-gold" onclick="printStickers()">🖨️ 列印</button>
+          </div>
+          <div id="sPreview" style="color:var(--text-muted);font-size:13px">請選擇條件後點「預覽」</div>
+        </div>
+      </div>
+
+      <div id="xPanel" style="display:none">
+        <div class="panel"><div class="panel-title">📋 選擇要匯出的欄位</div>
+          <div class="col-picker" id="colPicker"></div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-top:16px">
+            <div class="fg"><label>屆數</label><select id="xBatch"><option value="">全部</option></select></div>
+            <div class="fg"><label>分堂</label><select id="xBranch"><option value="">全部</option><option>北大</option><option>桃園</option><option>幸福</option><option>卓越大學</option><option>飛航</option><option>溫哥華</option></select></div>
+            <button class="btn btn-purple" onclick="printCustomTable()">🖨️ 列印表格</button>
+            <button class="btn btn-green" onclick="exportCustomCSV()">📥 匯出 CSV</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="cPanel" style="display:none">
+        <div class="panel"><div class="panel-title">📜 受洗證書設定</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px">
+            <div class="fg"><label>屆數</label><select id="cBatch" onchange="updateCertPreview()"><option value="">全部</option></select></div>
+            <div class="fg"><label>分堂</label><select id="cBranch" onchange="updateCertPreview()"><option value="">全部</option><option>北大</option><option>桃園</option><option>幸福</option><option>卓越大學</option><option>飛航</option><option>溫哥華</option></select></div>
+            <button class="btn btn-navy" onclick="printCerts()">🖨️ 列印所有證書</button>
+          </div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px">預覽（第一張）：</div>
+          <div id="cPreview"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="mhdr"><h3 id="mName">-</h3><button class="mclose" onclick="closeM()">✕</button></div>
+    <div class="mbody" id="mBody"></div>
+  </div>
+</div>
+
+
+</body></html>
