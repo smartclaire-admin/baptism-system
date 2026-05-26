@@ -198,7 +198,7 @@ function parseGviz(text){
       var cell=row.c?row.c[j]:null;
       rec[col]=(cell&&cell.v!=null)?String(cell.v):'';
     });
-    return {id:i+1,batch:rec['屆數']||'',no:rec['編號']||'',district:rec['區']||'',bigGroup:rec['大家']||'',smallGroup:rec['小家']||'',name:rec['姓名']||'',gender:rec['性別']||'',baptismDate:rec['受洗日期']||'',birthday:rec['生日']||'',age:rec['受洗年齡']||'',phoneH:rec['電話(H)']||'',phoneM:rec['電話(M)']||'',address:rec['地址']||'',email:rec['E_MAIL']||'',baptismType:rec['受洗方式']||'',tookClass:rec['是否上過受洗課程']||'',paperSubmitted:rec['受洗證書申請繳交']||'',paperDate:rec['申請繳交日期']||'',photoSubmitted:rec['已交照片']||'',bibleReceived:rec['聖經領取']||'',certReceived:rec['受洗證書領取']||'',church:rec['教會']||'',maritalStatus:rec['婚姻狀況']||'',couplesBaptism:rec['本次是否\n夫妻同受洗']||rec['本次是否夫妻同受洗']||'',spouseName:rec['您的丈夫/妻子姓名']||'',notes:rec['備註']||''};
+    return {id:i+1,batch:rec['屆數']||'',no:rec['編號']||'',district:rec['區']||'',bigGroup:rec['大家']||'',smallGroup:rec['小家']||'',name:rec['姓名']||'',gender:rec['性別']||'',baptismDate:rec['受洗日期']||'',birthday:rec['生日']||'',age:rec['受洗年齡']||'',phoneH:rec['電話(H)']||'',phoneM:rec['電話(M)']||'',address:rec['地址']||'',email:rec['E_MAIL']||'',baptismType:rec['受洗方式']||'',tookClass:rec['是否上過受洗課程']||'',paperSubmitted:rec['受洗證書申請繳交']||'',paperDate:rec['申請繳交日期']||'',photoSubmitted:rec['已交照片']||'',bibleReceived:rec['聖經領取']||'',certReceived:rec['受洗證書領取']||'',church:rec['教會']||'',maritalStatus:rec['婚姻狀況']||'',couplesBaptism:rec['本次是否\n夫妻同受洗']||rec['本次是否夫妻同受洗']||'',spouseName:rec['您的丈夫/妻子姓名']||'',notes:rec['備註']||'',groupOrder:rec['分組及受洗順序']||''};
   });
 }
 
@@ -526,14 +526,31 @@ function printStickers(){
   var br=document.getElementById('sBranch').value;
   var data=getByBatchBranch(b,br);
   if(!data.length){alert('沒有符合的資料');return;}
-  var rows='';
-  data.forEach(function(r){
-    rows+='<div class="st"><div class="sb">第'+(r.batch||'?')+'屆·'+getBranch(r)+'</div>'+
-      '<div class="sn">'+r.name+'</div>'+
-      '<div class="sg">'+(r.smallGroup||r.bigGroup||'')+'</div>'+
-      '<div class="si">No.'+(r.no||'-')+'</div></div>';
+  // 依「分組及受洗順序」排序
+  data.sort(function(a,b){
+    var ga=parseInt(a.groupOrder)||9999, gb=parseInt(b.groupOrder)||9999;
+    return ga-gb;
   });
-  var css='@page{size:A4;margin:10mm}body{font-family:"Microsoft JhengHei","PingFang TC",sans-serif;margin:0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6mm;padding:4mm}.st{border:1.5px dashed #999;border-radius:6px;padding:8px;text-align:center;height:35mm;display:flex;flex-direction:column;justify-content:center;break-inside:avoid}.sb{font-size:9px;color:#666;margin-bottom:3px}.sn{font-size:18px;font-weight:700;color:#1a2e4a;margin:4px 0}.sg{font-size:10px;color:#555}.si{font-size:10px;color:#2c6fad;font-weight:700;margin-top:4px}';
+  var rows='';
+  data.forEach(function(r,i){
+    var grp=r.groupOrder?r.groupOrder.toString().replace(/^(\d+).*$/,'$1'):'';
+    var seq=('00'+(i+1)).slice(-3);
+    rows+='<div class="st">'+
+      '<div class="sb">第'+(r.batch||'?')+'屆洗禮</div>'+
+      (grp?'<div class="sg">第 '+grp+' 組　'+(r.district||'')+'</div>':'<div class="sg">'+(r.district||'')+'</div>')+
+      '<div class="snum">'+seq+'</div>'+
+      '<div class="sn">'+r.name+'</div>'+
+    '</div>';
+  });
+  var css='@page{size:A4;margin:10mm}'+
+    'body{font-family:"DFWKaiShu","Microsoft JhengHei","PingFang TC",sans-serif;margin:0}'+
+    '@font-face{font-family:"DFWKaiShu";src:url("./dfw_xk5.ttc") format("truetype")}'+
+    '.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5mm;padding:4mm}'+
+    '.st{border:1.5px dashed #999;border-radius:4px;padding:10px 14px;height:40mm;display:flex;flex-direction:column;justify-content:center;break-inside:avoid}'+
+    '.sb{font-size:11px;color:#444;margin-bottom:2px;letter-spacing:1px}'+
+    '.sg{font-size:11px;color:#444;margin-bottom:4px;letter-spacing:1px}'+
+    '.snum{font-size:13px;color:#2c6fad;font-weight:700;margin-bottom:2px}'+
+    '.sn{font-size:22px;font-weight:700;color:#1a2e4a;letter-spacing:4px}';
   var w=window.open('','_blank');
   w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>名牌貼紙</title><style>'+css+'</style></head><body><div class="grid">'+rows+'</div></body></html>');
   w.document.close();
@@ -541,7 +558,6 @@ function printStickers(){
   setTimeout(function(){w.print();},500);
 }
 
-// ── 自訂欄位 ──
 function renderColPicker(){
   var html='';
   COLS.forEach(function(c){
@@ -591,67 +607,54 @@ function exportCustomCSV(){
 }
 
 // ── 證書 ──
+
+function parseCertDate(d){
+  if(!d||d==='-') return ['','',''];
+  var m=d.match(/Date\((\d+),(\d+),(\d+)\)/);
+  if(m) return [m[1],('0'+parseInt(m[2])).slice(-2),('0'+parseInt(m[3])).slice(-2)];
+  var p=d.replace(/-/g,'/').split('/');
+  if(p.length===3) return [p[0],('0'+parseInt(p[1])).slice(-2),('0'+parseInt(p[2])).slice(-2)];
+  return ['','',''];
+}
+function certBlock(r, preview){
+  var dt=parseCertDate(r.baptismDate);
+  var border=preview?'border:2px dashed #2c6fad;':'';
+  return '<div style="width:185mm;height:260mm;position:relative;background:transparent;'+border+'overflow:hidden;font-family:Noto Serif TC,標楷體,新細明體,serif">'+
+    '<div style="position:absolute;top:3%;left:4%;font-size:5.5mm;color:#1a1a1a;font-family:SweiSpring,新細明體,serif;letter-spacing:1px">No. '+(r.no||'')+'</div>'+
+    '<div style="position:absolute;top:37%;left:32%;display:flex;align-items:baseline;gap:6px">'+
+      '<span style="font-size:11mm;font-weight:900;color:#1a1a1a;letter-spacing:8px;font-family:DFWKaiShu,標楷體,DFKai-SB,serif">'+r.name+'</span>'+
+      '<span style="font-size:9mm;font-weight:900;color:#1a1a1a;letter-spacing:4px;font-family:DFWKaiShu,標楷體,DFKai-SB,serif">'+(r.gender==='女'?'姊妹':'弟兄')+'</span>'+
+    '</div>'+
+    (dt[0]?'<div style="position:absolute;top:51%;left:32%;font-size:7.5mm;color:#cc0000;font-weight:700;letter-spacing:4px;font-family:SweiSpring,新細明體,serif">'+
+      dt[0]+' 年　'+dt[1]+' 月　'+dt[2]+' 日'+
+    '</div>':'')+
+  '</div>';
+}
 function updateCertPreview(){
   var b=document.getElementById('cBatch').value;
   var br=document.getElementById('cBranch').value;
   var data=getByBatchBranch(b,br);
   if(!data.length){document.getElementById('cPreview').innerHTML='<p style="color:var(--red)">沒有符合的資料</p>';return;}
-  var r=data[0];
-  var dt=r.baptismDate?r.baptismDate.split('/'):{};
-  document.getElementById('cPreview').innerHTML=
-    '<div style="width:185mm;height:260mm;position:relative;border:2px dashed #2c6fad;background:rgba(255,255,255,0.5);font-family:Noto Serif TC,新細明體,serif">'+
-    '<div style="position:absolute;top:2.3%;left:4%;font-size:5.5mm;color:#1a1a1a">No. '+(r.no||'')+'</div>'+
-    '<div style="position:absolute;top:32.5%;left:32%;display:flex;align-items:baseline;gap:4px">'+
-      '<span style="font-size:7.5mm;color:#1a1a1a;letter-spacing:2px">恭喜</span>'+
-      '<span style="font-size:12mm;font-weight:900;color:#1a1a1a;letter-spacing:6px">'+r.name+'</span>'+
-      '<span style="font-size:9mm;font-weight:900;color:#1a1a1a;letter-spacing:4px">'+(r.gender==='女'?'姊妹':'弟兄')+'</span>'+
-    '</div>'+
-    (r.baptismDate?
-    '<div style="position:absolute;top:50.8%;left:32%;display:flex;align-items:baseline;font-size:7.5mm;color:#1a1a1a;letter-spacing:2px">'+
-      '<span>並於主曆　</span>'+
-      '<span style="color:#cc0000;font-weight:700;letter-spacing:4px">'+(dt[0]||'')+'</span>'+
-      '<span> 年　</span>'+
-      '<span style="color:#cc0000;font-weight:700;letter-spacing:4px">'+(dt[1]||'')+'</span>'+
-      '<span> 月　</span>'+
-      '<span style="color:#cc0000;font-weight:700;letter-spacing:4px">'+(dt[2]||'')+'</span>'+
-      '<span> 日，</span>'+
-    '</div>':'')+'</div>';
+  document.getElementById('cPreview').innerHTML=certBlock(data[0],true);
 }
 function printCerts(){
   var b=document.getElementById('cBatch').value;
   var br=document.getElementById('cBranch').value;
   var data=getByBatchBranch(b,br);
   if(!data.length){alert('沒有符合的資料');return;}
-  var css='@page{size:185mm 260mm;margin:0}body{margin:0;padding:0;font-family:"Noto Serif TC","新細明體","PMingLiU",serif}.cert{width:185mm;height:260mm;position:relative;background:transparent;page-break-after:always;overflow:hidden}.cert:last-child{page-break-after:avoid}.c-no{position:absolute;top:2.3%;left:4%;font-size:5.5mm;color:#1a1a1a}.c-name{position:absolute;top:32.5%;left:32%;display:flex;align-items:baseline;gap:4px}.c-greeting{font-size:7.5mm;color:#1a1a1a;letter-spacing:2px}.c-n{font-size:12mm;font-weight:900;color:#1a1a1a;letter-spacing:6px}.c-t{font-size:9mm;font-weight:900;color:#1a1a1a;letter-spacing:4px}.c-date{position:absolute;top:50.8%;left:32%;display:flex;align-items:baseline;font-size:7.5mm;color:#1a1a1a;letter-spacing:2px}.red{color:#cc0000;font-weight:700;letter-spacing:4px}';
-  var certs='';
-  data.forEach(function(r){
-    var dt=r.baptismDate?r.baptismDate.split('/'):{};
-    certs+='<div class="cert">'+
-      '<div class="c-no">No. '+(r.no||'')+'</div>'+
-      '<div class="c-name">'+
-        '<span class="c-greeting">恭喜</span>'+
-        '<span class="c-n">'+r.name+'</span>'+
-        '<span class="c-t">'+(r.gender==='女'?'姊妹':'弟兄')+'</span>'+
-      '</div>'+
-      (r.baptismDate?
-      '<div class="c-date">'+
-        '<span>並於主曆　</span>'+
-        '<span class="red">'+(dt[0]||'')+'</span>'+
-        '<span> 年　</span>'+
-        '<span class="red">'+(dt[1]||'')+'</span>'+
-        '<span> 月　</span>'+
-        '<span class="red">'+(dt[2]||'')+'</span>'+
-        '<span> 日，</span>'+
-      '</div>':'')+'</div>';
-  });
+  var css='@page{size:185mm 260mm;margin:0}body{margin:0;padding:0}'+
+    '@font-face{font-family:"DFWKaiShu";src:url("./dfw_xk5.ttc") format("truetype")}'+
+    '@font-face{font-family:"SweiSpring";src:url("./SweiSpringCJKtc-Regular.ttf") format("truetype")}';
+  var body=data.map(function(r){return certBlock(r,false);}).join('');
   var w=window.open('','_blank');
-  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>受洗證書</title><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap" rel="stylesheet"><style>'+css+'</style></head><body>'+certs+'</body></html>');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>受洗證書</title>'+
+    '<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap" rel="stylesheet">'+
+    '<style>'+css+'</style></head><body>'+body+'</body></html>');
   w.document.close();
   w.focus();
   setTimeout(function(){w.print();},800);
 }
 
-// ── CSV ──
 function doExportCSV(data,cols,name){
   var hdrs=cols.map(function(c){return c.l;});
   var rows=data.map(function(r){
