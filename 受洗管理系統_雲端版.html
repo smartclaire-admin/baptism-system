@@ -549,11 +549,13 @@ function renderColPicker(){
   var html='';
   COLS.forEach(function(c){
     var on=selCols.indexOf(c.k)!==-1;
-    html+='<div class="col-chip'+(on?' on':'')+'" onclick="toggleCol(''+c.k+'',this)">'+c.l+'</div>';
+    var cls='col-chip'+(on?' on':'');
+    html+='<div class="'+cls+'" onclick="toggleCol(this)" data-key="'+c.k+'">'+c.l+'</div>';
   });
   document.getElementById('colPicker').innerHTML=html;
 }
-function toggleCol(key,el){
+function toggleCol(el){
+  var key=el.getAttribute('data-key');
   var i=selCols.indexOf(key);
   if(i!==-1){selCols.splice(i,1);el.classList.remove('on');}
   else{selCols.push(key);el.classList.add('on');}
