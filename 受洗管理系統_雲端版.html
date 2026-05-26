@@ -5,79 +5,62 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>受洗管理系統 — 卓越北大教會</title>
 <script>
-var SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/10nL_h-DmAcJBQKssdVzgiLtK3VuS_1wqVRkign0pS1U/export?format=csv&gid=0";
+(function(){
+  var GVIZ = "https://docs.google.com/spreadsheets/d/10nL_h-DmAcJBQKssdVzgiLtK3VuS_1wqVRkign0pS1U/gviz/tq?tqx=out:json&sheet=Sheet1";
 
-function parseCSVLine(line) {
-  var result=[], cur='', inQ=false;
-  for(var i=0;i<line.length;i++){
-    var ch=line[i];
-    if(ch==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
-    else if(ch===','&&!inQ){result.push(cur);cur='';}
-    else cur+=ch;
+  function showLoad(){
+    document.body.style.cssText='margin:0;background:#faf7f2;font-family:Microsoft JhengHei,PingFang TC,sans-serif';
+    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column"><div style="font-size:48px;margin-bottom:16px;color:#c9a84c">✝</div><div style="font-size:18px;color:#1a2e4a;font-weight:700;margin-bottom:8px">卓越北大教會 受洗管理系統</div><div style="font-size:13px;color:#5a6a7a;margin-bottom:20px">正在載入資料...</div><div style="width:200px;height:4px;background:#d4c9b8;border-radius:2px;overflow:hidden"><div style="height:100%;background:#2c6fad;border-radius:2px;animation:ld 1.5s ease-in-out infinite"></div></div></div><style>@keyframes ld{0%{width:10%}50%{width:80%}100%{width:10%}}</style>';
   }
-  result.push(cur);
-  return result;
-}
 
-function parseCSV(text) {
-  var lines=text.split('\n'),headers=parseCSVLine(lines[0]),records=[];
-  for(var i=1;i<lines.length;i++){
-    if(!lines[i].trim())continue;
-    var vals=parseCSVLine(lines[i]),rec={};
-    headers.forEach(function(h,j){rec[h]=(vals[j]||'').trim();});
-    records.push(rec);
+  function showErr(msg){
+    document.body.style.cssText='margin:0;background:#faf7f2;font-family:Microsoft JhengHei,PingFang TC,sans-serif';
+    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:12px"><div style="font-size:36px">⚠️</div><div style="font-size:15px;color:#c0392b;font-weight:700">載入失敗</div><div style="font-size:12px;color:#5a6a7a;max-width:360px;text-align:center">'+msg+'</div><button onclick="location.reload()" style="padding:8px 20px;background:#1a2e4a;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px">重新載入</button></div>';
   }
-  return records;
-}
 
-function mapRec(r,idx){
-  return{
-    id:idx+1,batch:r['屆數']||'',no:r['編號']||'',
-    district:r['區']||'',bigGroup:r['大家']||'',smallGroup:r['小家']||'',
-    name:r['姓名']||'',gender:r['性別']||'',
-    baptismDate:r['受洗日期']||'',birthday:r['生日']||'',age:r['受洗年齡']||'',
-    phoneH:r['電話(H)']||'',phoneM:r['電話(M)']||'',
-    address:r['地址']||'',email:r['E_MAIL']||'',
-    baptismType:r['受洗方式']||'',tookClass:r['是否上過受洗課程']||'',
-    paperSubmitted:r['紙本繳交']||'',paperDate:r['紙本繳交日期']||'',
-    photoSubmitted:r['已交照片']||'',bibleReceived:r['聖經領取']||'',
-    certReceived:r['受洗證書領取']||'',church:r['教會']||'',
-    maritalStatus:r['婚姻狀況']||'',couplesBaptism:r['本次是否夫妻同受洗']||'',
-    spouseName:r['您的丈夫/妻子姓名']||'',notes:r['備註']||''
-  };
-}
-
-function showLoadScreen(msg){
-  document.body.style.cssText='margin:0;background:#faf7f2;font-family:Microsoft JhengHei,PingFang TC,sans-serif';
-  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column"><div style="font-size:48px;margin-bottom:16px;color:#c9a84c">✝</div><div style="font-size:18px;color:#1a2e4a;font-weight:700;margin-bottom:8px">卓越北大教會 受洗管理系統</div><div style="font-size:13px;color:#5a6a7a;margin-bottom:20px">'+msg+'</div><div style="width:200px;height:4px;background:#d4c9b8;border-radius:2px;overflow:hidden"><div style="height:100%;background:#2c6fad;border-radius:2px;animation:ld 1.5s ease-in-out infinite"></div></div></div><style>@keyframes ld{0%{width:10%}50%{width:80%}100%{width:10%}}</style>';
-}
-
-function showErrScreen(msg){
-  document.body.style.cssText='margin:0;background:#faf7f2;font-family:Microsoft JhengHei,PingFang TC,sans-serif';
-  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column"><div style="font-size:48px;margin-bottom:16px">⚠️</div><div style="font-size:16px;color:#c0392b;font-weight:700;margin-bottom:10px">載入失敗</div><div style="font-size:13px;color:#5a6a7a;max-width:400px;text-align:center;line-height:1.8">'+msg+'</div><button onclick="loadFromSheets()" style="margin-top:20px;padding:10px 24px;background:#1a2e4a;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer">🔄 重新載入</button></div>';
-}
-
-function loadFromSheets(){
-  showLoadScreen('正在從 Google Sheets 載入資料...');
-  fetch(SHEET_CSV_URL)
-    .then(function(r){
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      return r.text();
-    })
-    .then(function(text){
-      var rows=parseCSV(text);
-      window._ALL=rows.map(function(r,i){return mapRec(r,i);});
-      // 重繪頁面
-      document.open();
-      document.write(window._htmlTemplate);
-      document.close();
-    })
-    .catch(function(err){
-      showErrScreen('無法讀取 Google Sheets<br>'+err.message+'<br><br>請確認試算表已設定為「知道連結的人可以檢視」');
+  function parseGviz(jsonText){
+    // gviz 回傳格式：google.visualization.Query.setResponse({...})
+    var json = jsonText.replace(/^.*?setResponse\(/, '').replace(/\);\s*$/, '');
+    var data = JSON.parse(json);
+    var cols = data.table.cols.map(function(c){ return c.label; });
+    var rows = data.table.rows || [];
+    return rows.map(function(row, idx){
+      var rec = {id: idx+1};
+      cols.forEach(function(col, j){
+        var cell = row.c[j];
+        rec[col] = (cell && cell.v !== null && cell.v !== undefined) ? String(cell.v) : '';
+      });
+      return {
+        id: idx+1,
+        batch: rec['屆數']||'', no: rec['編號']||'',
+        district: rec['區']||'', bigGroup: rec['大家']||'', smallGroup: rec['小家']||'',
+        name: rec['姓名']||'', gender: rec['性別']||'',
+        baptismDate: rec['受洗日期']||'', birthday: rec['生日']||'', age: rec['受洗年齡']||'',
+        phoneH: rec['電話(H)']||'', phoneM: rec['電話(M)']||'',
+        address: rec['地址']||'', email: rec['E_MAIL']||'',
+        baptismType: rec['受洗方式']||'', tookClass: rec['是否上過受洗課程']||'',
+        paperSubmitted: rec['紙本繳交']||'', paperDate: rec['紙本繳交日期']||'',
+        photoSubmitted: rec['已交照片']||'', bibleReceived: rec['聖經領取']||'',
+        certReceived: rec['受洗證書領取']||'', church: rec['教會']||'',
+        maritalStatus: rec['婚姻狀況']||'', couplesBaptism: rec['本次是否夫妻同受洗']||'',
+        spouseName: rec['您的丈夫/妻子姓名']||'', notes: rec['備註']||''
+      };
     });
-}
+  }
 
-window.onload = function(){ loadFromSheets(); };
+  window.onload = function(){
+    showLoad();
+    fetch(GVIZ)
+      .then(function(r){ return r.text(); })
+      .then(function(text){
+        window._ALL = parseGviz(text);
+        initSystem();
+      })
+      .catch(function(e){
+        showErr('無法讀取 Google Sheets<br>' + e.message);
+      });
+  };
+})();
 </script>
 
 <style>
@@ -388,7 +371,7 @@ td{padding:9px 12px;white-space:nowrap;vertical-align:middle}
 
 <script>
 var CG = {"北大": ["北大", "卓越北大行道會", "臺北大學教會", "北大學青區", "北大師母區", "北大社青區"], "桃園": ["桃園", "卓越桃園行道會"], "幸福": ["台北幸福", "卓越台北幸福行道會", "幸福社學青區"], "卓越大學": ["卓越大學", "卓越大學教會"], "飛航": ["飛航", "卓越飛航行道會", "飛航牧區"], "溫哥華": ["溫哥華", "卓越溫哥華行道會"]};
-var ALL = JSON.parse(document.getElementById('bd').textContent).records;
+var ALL = window._ALL || [];
 var filtered = ALL.slice();
 var curPage = 1;
 var PAGE = 50;
