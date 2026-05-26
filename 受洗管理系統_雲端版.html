@@ -275,10 +275,10 @@ function showPage(name) {
 // ── Dashboard ──
 function renderDashboard() {
   var total = ALL.length;
-  var photoOk = ALL.filter(function(r){return r.photoSubmitted==='是';}).length;
-  var bibleOk = ALL.filter(function(r){return r.bibleReceived==='是';}).length;
-  var certOk  = ALL.filter(function(r){return r.certReceived==='是';}).length;
-  var paperOk = ALL.filter(function(r){return r.paperSubmitted==='是';}).length;
+  var photoOk = ALL.filter(function(r){return r.photoSubmitted&&r.photoSubmitted!=='-'&&r.photoSubmitted!=='否';}).length;
+  var bibleOk = ALL.filter(function(r){return r.bibleReceived&&r.bibleReceived!=='-'&&r.bibleReceived!=='否';}).length;
+  var certOk  = ALL.filter(function(r){return r.certReceived&&r.certReceived!=='-'&&r.certReceived!=='否'&&r.certReceived!=='待確認';}).length;
+  var paperOk = ALL.filter(function(r){return r.paperSubmitted&&r.paperSubmitted!=='-'&&r.paperSubmitted!=='否';}).length;
   var pending = ALL.filter(function(r){return r.photoSubmitted!=='是'||r.bibleReceived!=='是'||r.certReceived!=='是'||r.paperSubmitted!=='是';}).length;
   var batches = {}; ALL.forEach(function(r){if(r.batch)batches[r.batch]=1;});
 
@@ -388,8 +388,8 @@ function renderList(){
   renderPag(totalPg);
 }
 function bdg(v){
-  if(v==='是')return '<span class="badge by">是</span>';
-  if(v==='否')return '<span class="badge bn">否</span>';
+  if(v&&v!=='-'&&v!=='否'&&v!=='未填')return '<span class="badge by">是</span>';
+  if(v==='否'||v==='未填'||v==='-')return '<span class="badge bn">否</span>';
   return '<span class="badge be">未填</span>';
 }
 function renderPag(total){
@@ -456,8 +456,8 @@ function renderStats(){
     if(!bm[b])bm[b]={t:0,m:0,f:0,ph:0,bi:0,ce:0,pa:0};
     var x=bm[b];x.t++;
     if(r.gender==='男')x.m++;if(r.gender==='女')x.f++;
-    if(r.photoSubmitted==='是')x.ph++;if(r.bibleReceived==='是')x.bi++;
-    if(r.certReceived==='是')x.ce++;if(r.paperSubmitted==='是')x.pa++;
+    if(r.photoSubmitted&&r.photoSubmitted!=='-'&&r.photoSubmitted!=='否')x.ph++;if(r.bibleReceived&&r.bibleReceived!=='-'&&r.bibleReceived!=='否')x.bi++;
+    if(r.certReceived&&r.certReceived!=='-'&&r.certReceived!=='否'&&r.certReceived!=='待確認')x.ce++;if(r.paperSubmitted&&r.paperSubmitted!=='-'&&r.paperSubmitted!=='否')x.pa++;
   });
   var sorted=Object.keys(bm).sort(function(a,b){var na=parseFloat(a),nb=parseFloat(b);return(!isNaN(na)&&!isNaN(nb))?na-nb:a.localeCompare(b);});
   var html='';
@@ -571,8 +571,8 @@ function printCustomTable(){
   data.forEach(function(r){
     var tds=cols.map(function(c){
       var v=r[c.k];
-      if(v==='是')return '<td><span style="background:#e8f5ee;color:#2d7a4f;padding:1px 6px;border-radius:8px;font-size:10px">是</span></td>';
-      if(v==='否')return '<td><span style="background:#fdecea;color:#c0392b;padding:1px 6px;border-radius:8px;font-size:10px">否</span></td>';
+      if(v&&v!=='-'&&v!=='否'&&v!=='未填')return '<td><span style="background:#e8f5ee;color:#2d7a4f;padding:1px 6px;border-radius:8px;font-size:10px">是</span></td>';
+      if(v==='否'||v==='未填'||v==='-')return '<td><span style="background:#fdecea;color:#c0392b;padding:1px 6px;border-radius:8px;font-size:10px">否</span></td>';
       return '<td>'+(v!=null?v:'')+'</td>';
     }).join('');
     trs+='<tr>'+tds+'</tr>';
