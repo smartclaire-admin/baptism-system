@@ -208,6 +208,7 @@ function parseGviz(text){
   if(!m) throw new Error('無法解析回應');
   var data = JSON.parse(m[1]);
   var cols = data.table.cols.map(function(c){return c.label;});
+  var types = data.table.cols.map(function(c){return c.type;});
   return (data.table.rows||[]).map(function(row,i){
     var rec={};
     cols.forEach(function(col,j){
@@ -269,8 +270,9 @@ function getLatestBatch(){
   var batches = [];
   var seen = {};
   VALID.forEach(function(r){ if(r.batch && !seen[r.batch]){seen[r.batch]=1;batches.push(r.batch);} });
-  batches.sort(function(a,b){var na=parseFloat(a),nb=parseFloat(b);return(!isNaN(na)&&!isNaN(nb))?na-nb:a.localeCompare(b);});
-  return batches[batches.length-1];
+  var numeric = batches.filter(function(b){ return !isNaN(parseFloat(b)) && isFinite(b); });
+  numeric.sort(function(a,b){ return parseFloat(a)-parseFloat(b); });
+  return numeric[numeric.length-1];
 }
 
 function initSystem() {
