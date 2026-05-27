@@ -9,9 +9,10 @@
   <div class="header-title"><span class="cross">✝</span>卓越北大教會 — 受洗管理系統</div>
   <div class="hstats">
     <div class="hstat"><strong id="hTotal">-</strong>總人數</div>
+    <div class="hstat"><strong id="hLatest">-</strong>本屆人數</div>
     <div class="hstat"><strong id="hPhoto">-</strong>未交照片</div>
-    <div class="hstat"><strong id="hBible">-</strong>未領聖經</div>
-    <div class="hstat"><strong id="hCert">-</strong>未領證書</div>
+    <div class="hstat"><strong id="hClass">-</strong>課程未完成</div>
+    <div class="hstat"><strong id="hPaper">-</strong>證書未繳交</div>
   </div>
 </div>
 <div class="layout">
@@ -30,9 +31,15 @@
     <!-- 儀表板 -->
     <div class="page active" id="page-dashboard">
       <div class="page-hdr"><div><div class="page-title">總覽儀表板</div><div class="page-sub">受洗資料統計概覽</div></div></div>
-      <div class="cards" id="dashCards"></div>
-      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px">⛪ 各分堂受洗人數</div>
+
+      <!-- 第一列：各分堂受洗人數（所有屆） -->
+      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px">⛪ 各分堂受洗人數（所有屆）</div>
       <div class="branch-grid" id="branchGrid"></div>
+
+      <!-- 第二列：本屆受洗總覽 -->
+      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px;margin-top:8px">📋 本屆受洗總覽</div>
+      <div class="cards" id="dashCards"></div>
+
       <div class="grid2">
         <div class="box"><div class="box-title">📅 近10屆受洗人數</div><div id="batchChart"></div></div>
         <div class="box"><div class="box-title">✅ 待辦事項完成率</div><div id="todoChart"></div></div>
@@ -127,10 +134,10 @@
           <h4>📥 資料匯出 CSV</h4>
           <p>匯出各類清單為 CSV 檔案</p>
           <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
-            <button class="btn btn-green" style="justify-content:center" onclick="exportCSV(ALL,'全部受洗名單')">全部名單</button>
-            <button class="btn btn-red" style="justify-content:center" onclick="exportCSV(ALL.filter(function(r){return r.photoSubmitted!=='是'}),'未交照片')">未交照片</button>
-            <button class="btn btn-navy" style="justify-content:center" onclick="exportCSV(ALL.filter(function(r){return r.bibleReceived!=='是'}),'未領聖經')">未領聖經</button>
-            <button class="btn btn-purple" style="justify-content:center" onclick="exportCSV(ALL.filter(function(r){return r.certReceived!=='是'}),'未領證書')">未領證書</button>
+            <button class="btn btn-green" style="justify-content:center" onclick="exportCSV(VALID,'全部受洗名單')">全部名單</button>
+            <button class="btn btn-red" style="justify-content:center" onclick="exportCSV(VALID.filter(function(r){return r.photoSubmitted!=='已繳交'}),'未交照片')">未交照片</button>
+            <button class="btn btn-navy" style="justify-content:center" onclick="exportCSV(VALID.filter(function(r){return r.bibleReceived!=='是'}),'未領聖經')">未領聖經</button>
+            <button class="btn btn-purple" style="justify-content:center" onclick="exportCSV(VALID.filter(function(r){return r.certReceived!=='是'}),'未領證書')">未領證書</button>
           </div>
         </div>
       </div>
@@ -184,6 +191,7 @@
 `;</script>
 <script>
 var ALL = [];
+var VALID = []; // 排除取消後的有效資料
 var filtered = [];
 var CG = {"北大":["北大","卓越北大行道會","臺北大學教會","北大學青區","北大師母區","北大社青區"],"桃園":["桃園","卓越桃園行道會"],"幸福":["台北幸福","卓越台北幸福行道會","幸福社學青區"],"卓越大學":["卓越大學","卓越大學教會"],"飛航":["飛航","卓越飛航行道會","飛航牧區","卓越飛航福音中心"],"溫哥華":["溫哥華","卓越溫哥華行道會"]};
 
@@ -202,6 +210,25 @@ function parseGviz(text){
   });
 }
 
+// ── 輔助：判斷是否為有效資料（排除取消及空白屆數）
+function isValid(r){
+  return r.batch !== '' && r.batch !== '取消';
+}
+
+// ── 輔助：判斷照片是否已交
+function photoOk(r){
+  return r.photoSubmitted === '已繳交';
+}
+
+// ── 輔助：判斷課程是否完成（只有「已完成」開頭才算完成）
+function classOk(r){
+  return r.tookClass.indexOf('已完成') === 0;
+}
+
+// ── 輔助：判斷證書申請是否已繳
+function paperOk(r){
+  return r.paperSubmitted === '已繳';
+}
 
 var curPage = 1;
 var PAGE = 50;
@@ -229,7 +256,19 @@ function getBranch(r) {
   return '其他';
 }
 
+// ── 取得最新屆（排除取消後）
+function getLatestBatch(){
+  var batches = [];
+  var seen = {};
+  VALID.forEach(function(r){ if(r.batch && !seen[r.batch]){seen[r.batch]=1;batches.push(r.batch);} });
+  batches.sort(function(a,b){var na=parseFloat(a),nb=parseFloat(b);return(!isNaN(na)&&!isNaN(nb))?na-nb:a.localeCompare(b);});
+  return batches[batches.length-1];
+}
+
 function initSystem() {
+  // 建立有效資料集
+  VALID = ALL.filter(isValid);
+  filtered = VALID.slice();
   populateFilters();
   renderDashboard();
   renderList();
@@ -237,29 +276,32 @@ function initSystem() {
   renderStats();
   renderColPicker();
   updateHdr();
-};
+}
 
 function updateHdr() {
-  document.getElementById('hTotal').textContent = ALL.length.toLocaleString();
-  document.getElementById('hPhoto').textContent = ALL.filter(function(r){return r.photoSubmitted!=='是';}).length;
-  document.getElementById('hBible').textContent = ALL.filter(function(r){return r.bibleReceived!=='是';}).length;
-  document.getElementById('hCert').textContent = ALL.filter(function(r){return r.certReceived!=='是';}).length;
-  document.getElementById('todoBadge').textContent = ALL.filter(function(r){
-    return r.photoSubmitted!=='是'||r.bibleReceived!=='是'||r.certReceived!=='是'||r.paperSubmitted!=='是';
+  var latest = getLatestBatch();
+  var latestData = VALID.filter(function(r){return r.batch===latest;});
+  document.getElementById('hTotal').textContent = VALID.length.toLocaleString();
+  document.getElementById('hLatest').textContent = latestData.length.toLocaleString();
+  document.getElementById('hPhoto').textContent = latestData.filter(function(r){return !photoOk(r);}).length;
+  document.getElementById('hClass').textContent = latestData.filter(function(r){return !classOk(r);}).length;
+  document.getElementById('hPaper').textContent = latestData.filter(function(r){return !paperOk(r);}).length;
+  document.getElementById('todoBadge').textContent = VALID.filter(function(r){
+    return !photoOk(r)||r.bibleReceived!=='是'||r.certReceived!=='是'||!paperOk(r);
   }).length;
 }
 
 function populateFilters() {
   var batches = [];
   var seen = {};
-  ALL.forEach(function(r){ if(r.batch && !seen[r.batch]){seen[r.batch]=1;batches.push(r.batch);} });
+  VALID.forEach(function(r){ if(r.batch && !seen[r.batch]){seen[r.batch]=1;batches.push(r.batch);} });
   batches.sort(function(a,b){var na=parseFloat(a),nb=parseFloat(b);return(!isNaN(na)&&!isNaN(nb))?na-nb:a.localeCompare(b);});
   ['fBatch','sBatch','cBatch','xBatch'].forEach(function(id){
     var el=document.getElementById(id); if(!el)return;
     batches.forEach(function(b){var o=document.createElement('option');o.value=b;o.textContent='第'+b+'屆';el.appendChild(o);});
   });
   var dists=[]; var ds={};
-  ALL.forEach(function(r){if(r.district&&!ds[r.district]){ds[r.district]=1;dists.push(r.district);}});
+  VALID.forEach(function(r){if(r.district&&!ds[r.district]){ds[r.district]=1;dists.push(r.district);}});
   dists.sort();
   var distEl=document.getElementById('fDist');
   dists.forEach(function(d){var o=document.createElement('option');o.value=d;o.textContent=d;distEl.appendChild(o);});
@@ -274,52 +316,83 @@ function showPage(name) {
 
 // ── Dashboard ──
 function renderDashboard() {
-  var total = ALL.length;
-  var photoOk = ALL.filter(function(r){return r.photoSubmitted&&r.photoSubmitted!=='-'&&r.photoSubmitted!=='否';}).length;
-  var bibleOk = ALL.filter(function(r){return r.bibleReceived&&r.bibleReceived!=='-'&&r.bibleReceived!=='否';}).length;
-  var certOk  = ALL.filter(function(r){return r.certReceived&&r.certReceived!=='-'&&r.certReceived!=='否'&&r.certReceived!=='待確認';}).length;
-  var paperOk = ALL.filter(function(r){return r.paperSubmitted&&r.paperSubmitted!=='-'&&r.paperSubmitted!=='否';}).length;
-  var pending = ALL.filter(function(r){return r.photoSubmitted!=='是'||r.bibleReceived!=='是'||r.certReceived!=='是'||r.paperSubmitted!=='是';}).length;
-  var batches = {}; ALL.forEach(function(r){if(r.batch)batches[r.batch]=1;});
+  var total = VALID.length;
+  var latest = getLatestBatch();
+  var latestData = VALID.filter(function(r){return r.batch===latest;});
+  var latestTotal = latestData.length;
 
-  document.getElementById('dashCards').innerHTML =
-    card('','總受洗人數',total.toLocaleString(),'共'+Object.keys(batches).length+'屆') +
-    card('gold','未交照片',total-photoOk,'已交'+photoOk) +
-    card('green','已領聖經',bibleOk,'未領'+(total-bibleOk)) +
-    card('red','未領證書',total-certOk,'已領'+certOk) +
-    card('purple','有待辦事項',pending,'需要跟進');
-
+  // 本屆各分堂人數
   var branchDefs=[
     {n:'北大',c:'c1'},{n:'桃園',c:'c2'},{n:'幸福',c:'c3'},
     {n:'卓越大學',c:'c4'},{n:'飛航',c:'c5'},{n:'溫哥華',c:'c6'},{n:'其他',c:'c7'}
   ];
-  var bm={};
-  ALL.forEach(function(r){var b=getBranch(r);bm[b]=(bm[b]||0)+1;});
-  document.getElementById('branchGrid').innerHTML = branchDefs.map(function(b){
-    var n=bm[b.n]||0;
-    return '<div class="bc '+b.c+'"><div class="bc-name">'+b.n+'</div><div class="bc-count">'+n.toLocaleString()+'</div><div class="bc-pct">'+( total?(n/total*100).toFixed(1):0 )+'%</div></div>';
-  }).join('');
 
+  // ── 第一列：各分堂受洗人數（所有屆）
+  var bmAll={};
+  VALID.forEach(function(r){var b=getBranch(r);bmAll[b]=(bmAll[b]||0)+1;});
+  var totalCard = '<div class="bc c0"><div class="bc-name">總受洗人數</div><div class="bc-count" style="color:var(--navy)">'+total.toLocaleString()+'</div><div class="bc-pct">共'+Object.keys(function(){var s={};VALID.forEach(function(r){s[r.batch]=1;});return s;}()).length+'屆</div></div>';
+
+  // 計算屆數總數
+  var batchCountObj={};
+  VALID.forEach(function(r){if(r.batch)batchCountObj[r.batch]=1;});
+  var batchCount = Object.keys(batchCountObj).length;
+
+  document.getElementById('branchGrid').innerHTML =
+    '<div class="bc c0"><div class="bc-name">總受洗人數</div><div class="bc-count" style="color:var(--navy)">'+total.toLocaleString()+'</div><div class="bc-pct">共'+batchCount+'屆</div></div>' +
+    branchDefs.map(function(b){
+      var n=bmAll[b.n]||0;
+      return '<div class="bc '+b.c+'"><div class="bc-name">'+b.n+'</div><div class="bc-count">'+n.toLocaleString()+'</div><div class="bc-pct">'+(total?(n/total*100).toFixed(1):0)+'%</div></div>';
+    }).join('');
+
+  // ── 第二列：本屆受洗總覽（4張卡片）
+  var photoNo  = latestData.filter(function(r){return !photoOk(r);}).length;
+  var classNo  = latestData.filter(function(r){return !classOk(r);}).length;
+  var paperNo  = latestData.filter(function(r){return !paperOk(r);}).length;
+
+  // 本屆各分堂小計（用在第1張卡片下方）
+  var bmLatest={};
+  latestData.forEach(function(r){var b=getBranch(r);bmLatest[b]=(bmLatest[b]||0)+1;});
+  var branchSubHtml = '<div class="card-branch-grid">' +
+    branchDefs.map(function(b){
+      var n=bmLatest[b.n]||0;
+      return '<div class="card-branch-item"><span class="card-branch-dot dot-'+b.c+'"></span><span class="card-branch-name">'+b.n+'</span><span class="card-branch-n">'+n+'</span></div>';
+    }).join('') +
+  '</div>';
+
+  document.getElementById('dashCards').innerHTML =
+    '<div class="card blue"><div class="card-lbl">本屆受洗人數</div><div class="card-val">'+latestTotal.toLocaleString()+'</div><div class="card-sub">第'+latest+'屆</div>'+branchSubHtml+'</div>' +
+    card('gold','未交照片',photoNo,'已交 '+(latestTotal-photoNo)+' 人') +
+    card('purple','受洗課程未完成',classNo,'已完成 '+(latestTotal-classNo)+' 人') +
+    card('red','證書申請未繳交',paperNo,'已繳 '+(latestTotal-paperNo)+' 人');
+
+  // 近10屆受洗人數（使用VALID）
   var batchMap={};
-  ALL.forEach(function(r){if(r.batch)batchMap[r.batch]=(batchMap[r.batch]||0)+1;});
+  VALID.forEach(function(r){if(r.batch)batchMap[r.batch]=(batchMap[r.batch]||0)+1;});
   var sortedB=Object.keys(batchMap).sort(function(a,b){var na=parseFloat(a),nb=parseFloat(b);return(!isNaN(na)&&!isNaN(nb))?na-nb:a.localeCompare(b);}).slice(-10);
   var maxB=Math.max.apply(null,sortedB.map(function(b){return batchMap[b];}));
   document.getElementById('batchChart').innerHTML = sortedB.map(function(b){
     return barRow('第'+b+'屆', batchMap[b]/maxB*100, batchMap[b], '');
   }).join('');
 
+  // 待辦完成率（使用VALID）
+  var photoOkAll = VALID.filter(photoOk).length;
+  var bibleOkAll = VALID.filter(function(r){return r.bibleReceived&&r.bibleReceived!=='-'&&r.bibleReceived!=='否';}).length;
+  var certOkAll  = VALID.filter(function(r){return r.certReceived&&r.certReceived!=='-'&&r.certReceived!=='否'&&r.certReceived!=='待確認';}).length;
+  var paperOkAll = VALID.filter(paperOk).length;
   document.getElementById('todoChart').innerHTML = [
-    ['已交照片',photoOk,'green'],['已領聖經',bibleOk,'gold'],['已領證書',certOk,''],['已繳紙本',paperOk,'purple']
+    ['已交照片',photoOkAll,'green'],['已領聖經',bibleOkAll,'gold'],['已領證書',certOkAll,''],['已繳申請',paperOkAll,'purple']
   ].map(function(x){return barRow(x[0],x[1]/total*100,(x[1]/total*100).toFixed(0)+'%',x[2]);}).join('');
 
-  var male=ALL.filter(function(r){return r.gender==='男';}).length;
-  var female=ALL.filter(function(r){return r.gender==='女';}).length;
+  // 性別分布（使用VALID）
+  var male=VALID.filter(function(r){return r.gender==='男';}).length;
+  var female=VALID.filter(function(r){return r.gender==='女';}).length;
   document.getElementById('genderChart').innerHTML =
     barRow('男',male/total*100,male+' ('+(male/total*100).toFixed(1)+'%)','') +
     barRow('女',female/total*100,female+' ('+(female/total*100).toFixed(1)+'%)','red');
 
+  // 受洗方式（使用VALID）
   var typeMap={};
-  ALL.forEach(function(r){if(r.baptismType)typeMap[r.baptismType]=(typeMap[r.baptismType]||0)+1;});
+  VALID.forEach(function(r){if(r.baptismType)typeMap[r.baptismType]=(typeMap[r.baptismType]||0)+1;});
   var sortedT=Object.entries(typeMap).sort(function(a,b){return b[1]-a[1];});
   var maxT=sortedT[0]?sortedT[0][1]:1;
   document.getElementById('typeChart').innerHTML = sortedT.map(function(t){
@@ -342,7 +415,7 @@ function applyFilter() {
   var dist=document.getElementById('fDist').value;
   var gender=document.getElementById('fGender').value;
   var name=document.getElementById('fName').value.trim();
-  filtered=ALL.filter(function(r){
+  filtered=VALID.filter(function(r){
     if(batch&&r.batch!==batch)return false;
     if(branch&&getBranch(r)!==branch)return false;
     if(dist&&r.district!==dist)return false;
@@ -355,7 +428,7 @@ function applyFilter() {
 function clearFilter(){
   ['fBatch','fBranch','fDist','fGender'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('fName').value='';
-  filtered=ALL.slice();curPage=1;renderList();
+  filtered=VALID.slice();curPage=1;renderList();
 }
 function renderList(){
   document.getElementById('rCount').textContent=filtered.length.toLocaleString();
@@ -409,7 +482,7 @@ function goPage(p){
 
 // ── Todo ──
 function getTodo(){
-  return ALL.filter(function(r){return r.photoSubmitted!=='是'||r.bibleReceived!=='是'||r.certReceived!=='是'||r.paperSubmitted!=='是';});
+  return VALID.filter(function(r){return !photoOk(r)||r.bibleReceived!=='是'||r.certReceived!=='是'||!paperOk(r);});
 }
 function setTodoF(f,el){
   todoF=f;
@@ -419,18 +492,18 @@ function setTodoF(f,el){
 }
 function renderTodo(){
   var data=getTodo();
-  if(todoF==='ph')data=data.filter(function(r){return r.photoSubmitted!=='是';});
+  if(todoF==='ph')data=data.filter(function(r){return !photoOk(r);});
   else if(todoF==='bi')data=data.filter(function(r){return r.bibleReceived!=='是';});
   else if(todoF==='ce')data=data.filter(function(r){return r.certReceived!=='是';});
-  else if(todoF==='pa')data=data.filter(function(r){return r.paperSubmitted!=='是';});
+  else if(todoF==='pa')data=data.filter(function(r){return !paperOk(r);});
   document.getElementById('todoCount').textContent=data.length.toLocaleString();
   var html='';
   data.forEach(function(r){
     var p=[];
-    if(r.photoSubmitted!=='是')p.push('📷未交照片');
+    if(!photoOk(r))p.push('📷未交照片');
     if(r.bibleReceived!=='是')p.push('📖未領聖經');
     if(r.certReceived!=='是')p.push('📜未領證書');
-    if(r.paperSubmitted!=='是')p.push('📑未繳紙本');
+    if(!paperOk(r))p.push('📑未繳紙本');
     html+='<tr>'+
       '<td><span class="badge bb">'+(r.batch||'-')+'</span></td>'+
       '<td>'+(r.no||'-')+'</td>'+
@@ -451,13 +524,15 @@ function renderTodo(){
 // ── Stats ──
 function renderStats(){
   var bm={};
-  ALL.forEach(function(r){
+  VALID.forEach(function(r){
     var b=r.batch||'(未填)';
     if(!bm[b])bm[b]={t:0,m:0,f:0,ph:0,bi:0,ce:0,pa:0};
     var x=bm[b];x.t++;
     if(r.gender==='男')x.m++;if(r.gender==='女')x.f++;
-    if(r.photoSubmitted&&r.photoSubmitted!=='-'&&r.photoSubmitted!=='否')x.ph++;if(r.bibleReceived&&r.bibleReceived!=='-'&&r.bibleReceived!=='否')x.bi++;
-    if(r.certReceived&&r.certReceived!=='-'&&r.certReceived!=='否'&&r.certReceived!=='待確認')x.ce++;if(r.paperSubmitted&&r.paperSubmitted!=='-'&&r.paperSubmitted!=='否')x.pa++;
+    if(photoOk(r))x.ph++;
+    if(r.bibleReceived&&r.bibleReceived!=='-'&&r.bibleReceived!=='否')x.bi++;
+    if(r.certReceived&&r.certReceived!=='-'&&r.certReceived!=='否'&&r.certReceived!=='待確認')x.ce++;
+    if(paperOk(r))x.pa++;
   });
   var sorted=Object.keys(bm).sort(function(a,b){var na=parseFloat(a),nb=parseFloat(b);return(!isNaN(na)&&!isNaN(nb))?na-nb:a.localeCompare(b);});
   var html='';
@@ -500,7 +575,7 @@ function closeM(){document.getElementById('overlay').classList.remove('open');}
 
 // ── 名牌貼紙 ──
 function getByBatchBranch(bId,brId){
-  return ALL.filter(function(r){
+  return VALID.filter(function(r){
     if(bId&&r.batch!==bId)return false;
     if(brId&&getBranch(r)!==brId)return false;
     return true;
@@ -526,7 +601,6 @@ function printStickers(){
   var br=document.getElementById('sBranch').value;
   var data=getByBatchBranch(b,br);
   if(!data.length){alert('沒有符合的資料');return;}
-  // 依受洗順序排序
   data.sort(function(a,b){
     var ga=parseInt(a.baptismOrder)||9999, gb=parseInt(b.baptismOrder)||9999;
     return ga-gb;
@@ -602,7 +676,6 @@ function exportCustomCSV(){
 }
 
 // ── 證書 ──
-
 function parseCertDate(d){
   if(!d||d==='-') return ['','',''];
   var m=d.match(/Date\((\d+),(\d+),(\d+)\)/);
@@ -667,7 +740,6 @@ function exportCSV(data,name){ doExportCSV(data,COLS,name); }
 
 
 window.onload = function(){
-  // 先顯示載入畫面
   document.body.style.display='flex';
   document.body.style.alignItems='center';
   document.body.style.justifyContent='center';
@@ -676,13 +748,13 @@ window.onload = function(){
   document.body.style.fontFamily='Microsoft JhengHei,PingFang TC,sans-serif';
   document.body.style.background='#faf7f2';
   document.body.innerHTML='<div style="text-align:center"><div style="font-size:48px;color:#c9a84c;margin-bottom:16px">✝</div><div style="font-size:18px;color:#1a2e4a;font-weight:700;margin-bottom:8px">卓越北大教會 受洗管理系統</div><div style="font-size:13px;color:#5a6a7a;margin-bottom:20px">正在載入資料...</div><div style="width:200px;height:4px;background:#d4c9b8;border-radius:2px;overflow:hidden;margin:0 auto"><div style="height:100%;background:#2c6fad;animation:ld 1.5s ease-in-out infinite"></div></div></div><style>@keyframes ld{0%{width:10%}50%{width:80%}100%{width:10%}}</style>';
-  
+
   fetch('https://docs.google.com/spreadsheets/d/10nL_h-DmAcJBQKssdVzgiLtK3VuS_1wqVRkign0pS1U/gviz/tq?tqx=out:json')
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
     .then(function(text){
       ALL = parseGviz(text);
-      filtered = ALL.slice();
-      // 還原頁面
+      VALID = ALL.filter(isValid);
+      filtered = VALID.slice();
       document.body.removeAttribute('style');
       document.body.innerHTML = window._originalBody;
       initSystem();
@@ -721,22 +793,43 @@ body{font-family:"Microsoft JhengHei","PingFang TC","Apple LiGothic",sans-serif;
 .page-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .page-title{font-size:22px;font-weight:700;color:var(--navy)}
 .page-sub{font-size:13px;color:var(--text-muted);margin-top:2px}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px}
+
+/* ── 卡片 ── */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
 .card{background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--blue)}
-.card.gold{border-color:var(--gold)}.card.green{border-color:var(--green)}.card.red{border-color:var(--red)}.card.purple{border-color:#7c4dff}
+.card.blue{border-color:var(--blue)}
+.card.gold{border-color:var(--gold)}
+.card.green{border-color:var(--green)}
+.card.red{border-color:var(--red)}
+.card.purple{border-color:#7c4dff}
 .card-lbl{font-size:12px;color:var(--text-muted);font-weight:500;margin-bottom:8px}
 .card-val{font-size:32px;font-weight:700;color:var(--navy);line-height:1}
 .card-sub{font-size:11px;color:var(--text-muted);margin-top:6px}
+
+/* 本屆卡片內各分堂小計 */
+.card-branch-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.card-branch-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted)}
+.card-branch-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-c1{background:#2c6fad}.dot-c2{background:#e67e22}.dot-c3{background:#27ae60}
+.dot-c4{background:#8e44ad}.dot-c5{background:#e74c3c}.dot-c6{background:#16a085}.dot-c7{background:#7f8c8d}
+.card-branch-name{flex:1}
+.card-branch-n{font-weight:700;color:var(--navy)}
+
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
 .box{background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
 .box-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--cream2)}
+
+/* ── 分堂格 ── */
 .branch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:24px}
 .bc{background:white;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);text-align:center;border-top:4px solid var(--blue)}
+.bc.c0{border-color:var(--navy)}
 .bc.c1{border-color:#2c6fad}.bc.c2{border-color:#e67e22}.bc.c3{border-color:#27ae60}.bc.c4{border-color:#8e44ad}.bc.c5{border-color:#e74c3c}.bc.c6{border-color:#16a085}.bc.c7{border-color:#7f8c8d}
 .bc-name{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px}
 .bc-count{font-size:28px;font-weight:700}
+.bc.c0 .bc-count{color:var(--navy)}
 .bc.c1 .bc-count{color:#2c6fad}.bc.c2 .bc-count{color:#e67e22}.bc.c3 .bc-count{color:#27ae60}.bc.c4 .bc-count{color:#8e44ad}.bc.c5 .bc-count{color:#e74c3c}.bc.c6 .bc-count{color:#16a085}.bc.c7 .bc-count{color:#7f8c8d}
 .bc-pct{font-size:11px;color:var(--text-muted);margin-top:4px}
+
 .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .bar-lbl{font-size:12px;color:var(--text);min-width:80px;text-align:right}
 .bar-track{flex:1;height:22px;background:var(--cream2);border-radius:4px;overflow:hidden}
@@ -809,14 +902,6 @@ td{padding:9px 12px;white-space:nowrap;vertical-align:middle}
 .s-name{font-size:20px;font-weight:700;color:var(--navy);margin:4px 0}
 .s-grp{font-size:11px;color:var(--text-muted)}
 .s-no{font-size:11px;color:var(--blue);font-weight:600;margin-top:4px}
-.cert-preview{border:3px double var(--gold);border-radius:12px;padding:40px;text-align:center;background:linear-gradient(135deg,#fffdf5,#fff8e7);max-width:560px;margin:16px auto 0}
-.cert-cross{font-size:36px;color:var(--gold);margin-bottom:10px}
-.cert-title{font-size:26px;font-weight:700;color:var(--navy);letter-spacing:4px;margin-bottom:6px}
-.cert-sub{font-size:13px;color:#888;margin-bottom:24px;letter-spacing:2px}
-.cert-name{font-size:32px;font-weight:700;color:var(--navy);border-bottom:2px solid var(--gold);padding-bottom:8px;margin-bottom:18px;display:inline-block}
-.cert-body{font-size:14px;color:#333;line-height:2.2;margin-bottom:16px}
-.cert-info{font-size:12px;color:#888}
-.cert-seal{margin-top:20px;font-size:11px;color:#888;border-top:1px solid #ddd;padding-top:14px}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 </style>
@@ -826,9 +911,10 @@ td{padding:9px 12px;white-space:nowrap;vertical-align:middle}
   <div class="header-title"><span class="cross">✝</span>卓越北大教會 — 受洗管理系統</div>
   <div class="hstats">
     <div class="hstat"><strong id="hTotal">-</strong>總人數</div>
+    <div class="hstat"><strong id="hLatest">-</strong>本屆人數</div>
     <div class="hstat"><strong id="hPhoto">-</strong>未交照片</div>
-    <div class="hstat"><strong id="hBible">-</strong>未領聖經</div>
-    <div class="hstat"><strong id="hCert">-</strong>未領證書</div>
+    <div class="hstat"><strong id="hClass">-</strong>課程未完成</div>
+    <div class="hstat"><strong id="hPaper">-</strong>證書未繳交</div>
   </div>
 </div>
 <div class="layout">
@@ -847,9 +933,15 @@ td{padding:9px 12px;white-space:nowrap;vertical-align:middle}
     <!-- 儀表板 -->
     <div class="page active" id="page-dashboard">
       <div class="page-hdr"><div><div class="page-title">總覽儀表板</div><div class="page-sub">受洗資料統計概覽</div></div></div>
-      <div class="cards" id="dashCards"></div>
-      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px">⛪ 各分堂受洗人數</div>
+
+      <!-- 第一列：各分堂受洗人數（所有屆） -->
+      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px">⛪ 各分堂受洗人數（所有屆）</div>
       <div class="branch-grid" id="branchGrid"></div>
+
+      <!-- 第二列：本屆受洗總覽 -->
+      <div style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px;margin-top:8px">📋 本屆受洗總覽</div>
+      <div class="cards" id="dashCards"></div>
+
       <div class="grid2">
         <div class="box"><div class="box-title">📅 近10屆受洗人數</div><div id="batchChart"></div></div>
         <div class="box"><div class="box-title">✅ 待辦事項完成率</div><div id="todoChart"></div></div>
@@ -944,10 +1036,10 @@ td{padding:9px 12px;white-space:nowrap;vertical-align:middle}
           <h4>📥 資料匯出 CSV</h4>
           <p>匯出各類清單為 CSV 檔案</p>
           <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
-            <button class="btn btn-green" style="justify-content:center" onclick="exportCSV(ALL,'全部受洗名單')">全部名單</button>
-            <button class="btn btn-red" style="justify-content:center" onclick="exportCSV(ALL.filter(function(r){return r.photoSubmitted!=='是'}),'未交照片')">未交照片</button>
-            <button class="btn btn-navy" style="justify-content:center" onclick="exportCSV(ALL.filter(function(r){return r.bibleReceived!=='是'}),'未領聖經')">未領聖經</button>
-            <button class="btn btn-purple" style="justify-content:center" onclick="exportCSV(ALL.filter(function(r){return r.certReceived!=='是'}),'未領證書')">未領證書</button>
+            <button class="btn btn-green" style="justify-content:center" onclick="exportCSV(VALID,'全部受洗名單')">全部名單</button>
+            <button class="btn btn-red" style="justify-content:center" onclick="exportCSV(VALID.filter(function(r){return !photoOk(r)}),'未交照片')">未交照片</button>
+            <button class="btn btn-navy" style="justify-content:center" onclick="exportCSV(VALID.filter(function(r){return r.bibleReceived!=='是'}),'未領聖經')">未領聖經</button>
+            <button class="btn btn-purple" style="justify-content:center" onclick="exportCSV(VALID.filter(function(r){return r.certReceived!=='是'}),'未領證書')">未領證書</button>
           </div>
         </div>
       </div>
@@ -998,6 +1090,4 @@ td{padding:9px 12px;white-space:nowrap;vertical-align:middle}
     <div class="mbody" id="mBody"></div>
   </div>
 </div>
-
-
 </body></html>
