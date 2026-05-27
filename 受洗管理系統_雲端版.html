@@ -198,7 +198,7 @@ function parseGviz(text){
       var cell=row.c?row.c[j]:null;
       rec[col]=(cell&&cell.v!=null)?String(cell.v):'';
     });
-    return {id:i+1,batch:rec['屆數']||'',no:rec['編號']||'',district:rec['區']||'',bigGroup:rec['大家']||'',smallGroup:rec['小家']||'',name:rec['姓名']||'',gender:rec['性別']||'',baptismDate:rec['受洗日期']||'',birthday:rec['生日']||'',age:rec['受洗年齡']||'',phoneH:rec['電話(H)']||'',phoneM:rec['電話(M)']||'',address:rec['地址']||'',email:rec['E_MAIL']||'',baptismType:rec['受洗方式']||'',tookClass:rec['是否上過受洗課程']||'',paperSubmitted:rec['受洗證書申請繳交']||'',paperDate:rec['申請繳交日期']||'',photoSubmitted:rec['已交照片']||'',bibleReceived:rec['聖經領取']||'',certReceived:rec['受洗證書領取']||'',church:rec['教會']||'',maritalStatus:rec['婚姻狀況']||'',couplesBaptism:rec['本次是否\n夫妻同受洗']||rec['本次是否夫妻同受洗']||'',spouseName:rec['您的丈夫/妻子姓名']||'',notes:rec['備註']||'',groupOrder:rec['分組及受洗順序']||''};
+    return {id:i+1,batch:rec['屆數']||'',no:rec['編號']||'',district:rec['區']||'',bigGroup:rec['大家']||'',smallGroup:rec['小家']||'',name:rec['姓名']||'',gender:rec['性別']||'',baptismDate:rec['受洗日期']||'',birthday:rec['生日']||'',age:rec['受洗年齡']||'',phoneH:rec['電話(H)']||'',phoneM:rec['電話(M)']||'',address:rec['地址']||'',email:rec['E_MAIL']||'',baptismType:rec['受洗方式']||'',tookClass:rec['是否上過受洗課程']||'',paperSubmitted:rec['受洗證書申請繳交']||'',paperDate:rec['申請繳交日期']||'',photoSubmitted:rec['已交照片']||'',bibleReceived:rec['聖經領取']||'',certReceived:rec['受洗證書領取']||'',church:rec['教會']||'',maritalStatus:rec['婚姻狀況']||'',couplesBaptism:rec['本次是否\n夫妻同受洗']||rec['本次是否夫妻同受洗']||'',spouseName:rec['您的丈夫/妻子姓名']||'',notes:rec['備註']||'',groupNo:rec['分組']||'',baptismOrder:rec['受洗順序']||''};
   });
 }
 
@@ -526,31 +526,26 @@ function printStickers(){
   var br=document.getElementById('sBranch').value;
   var data=getByBatchBranch(b,br);
   if(!data.length){alert('沒有符合的資料');return;}
-  // 依「分組及受洗順序」排序
+  // 依受洗順序排序
   data.sort(function(a,b){
-    var ga=parseInt(a.groupOrder)||9999, gb=parseInt(b.groupOrder)||9999;
+    var ga=parseInt(a.baptismOrder)||9999, gb=parseInt(b.baptismOrder)||9999;
     return ga-gb;
   });
   var rows='';
-  data.forEach(function(r,i){
-    var grp=r.groupOrder?r.groupOrder.toString().replace(/^(\d+).*$/,'$1'):'';
-    var seq=('00'+(i+1)).slice(-3);
+  data.forEach(function(r){
     rows+='<div class="st">'+
-      '<div class="sb">第'+(r.batch||'?')+'屆洗禮</div>'+
-      (grp?'<div class="sg">第 '+grp+' 組　'+(r.district||'')+'</div>':'<div class="sg">'+(r.district||'')+'</div>')+
-      '<div class="snum">'+seq+'</div>'+
-      '<div class="sn">'+r.name+'</div>'+
+      '<div class="sb">第 '+(r.batch||'?')+' 洗禮</div>'+
+      '<div class="sg">第 '+(r.groupNo||'?')+' 組　'+(r.district||'')+'</div>'+
+      '<div class="sn">'+(r.baptismOrder||'')+'　'+r.name+'</div>'+
     '</div>';
   });
   var css='@page{size:A4;margin:10mm}'+
-    'body{font-family:"DFWKaiShu","Microsoft JhengHei","PingFang TC",sans-serif;margin:0}'+
-    '@font-face{font-family:"DFWKaiShu";src:url("./dfw_xk5.ttc") format("truetype")}'+
-    '.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5mm;padding:4mm}'+
-    '.st{border:1.5px dashed #999;border-radius:4px;padding:10px 14px;height:40mm;display:flex;flex-direction:column;justify-content:center;break-inside:avoid}'+
-    '.sb{font-size:11px;color:#444;margin-bottom:2px;letter-spacing:1px}'+
-    '.sg{font-size:11px;color:#444;margin-bottom:4px;letter-spacing:1px}'+
-    '.snum{font-size:13px;color:#2c6fad;font-weight:700;margin-bottom:2px}'+
-    '.sn{font-size:22px;font-weight:700;color:#1a2e4a;letter-spacing:4px}';
+    'body{font-family:"Microsoft JhengHei","PingFang TC",sans-serif;margin:0}'+
+    '.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8mm;padding:4mm}'+
+    '.st{padding:12px 16px;height:50mm;display:flex;flex-direction:column;justify-content:flex-start;break-inside:avoid}'+
+    '.sb{font-size:11px;color:#333;margin-bottom:3px;letter-spacing:1px}'+
+    '.sg{font-size:11px;color:#2c6fad;margin-bottom:6px;letter-spacing:1px;font-weight:600}'+
+    '.sn{font-size:28px;font-weight:700;color:#2c6fad;letter-spacing:2px}';
   var w=window.open('','_blank');
   w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>名牌貼紙</title><style>'+css+'</style></head><body><div class="grid">'+rows+'</div></body></html>');
   w.document.close();
