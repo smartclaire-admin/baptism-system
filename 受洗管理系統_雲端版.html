@@ -215,7 +215,7 @@ function parseGviz(text){
       var cell=row.c?row.c[j]:null;
       rec[col]=(cell&&cell.v!=null)?String(cell.v):(cell&&cell.f!=null)?String(cell.f):'';
     });
-    return {id:i+1,batch:rec['屆數']||'',no:rec['編號']||'',district:rec['區']||'',bigGroup:rec['大家']||'',smallGroup:rec['小家']||'',name:rec['姓名']||'',gender:rec['性別']||'',baptismDate:rec['受洗日期']||'',birthday:rec['生日']||'',age:rec['受洗年齡']||'',phoneH:rec['電話(H)']||'',phoneM:rec['電話(M)']||'',address:rec['地址']||'',email:rec['E_MAIL']||'',baptismType:rec['受洗方式']||'',tookClass:rec['是否上過受洗課程']||'',paperSubmitted:rec['受洗證書申請繳交']||'',paperDate:rec['申請繳交日期']||'',photoSubmitted:rec['已交照片']||'',bibleReceived:rec['聖經領取']||'',certReceived:rec['受洗證書領取']||'',church:rec['教會']||'',maritalStatus:rec['婚姻狀況']||'',couplesBaptism:rec['本次是否\n夫妻同受洗']||rec['本次是否夫妻同受洗']||'',spouseName:rec['您的丈夫/妻子姓名']||'',notes:rec['備註']||'',groupNo:rec['分組']||'',baptismOrder:rec['受洗順序']||''};
+    return {id:i+1,batch:rec['屆數']||'',no:rec['編號']||'',location:rec['地點']||'',district:rec['區']||'',bigGroup:rec['大家']||'',smallGroup:rec['小家']||'',name:rec['姓名']||'',gender:rec['性別']||'',baptismDate:rec['受洗日期']||'',birthday:rec['生日']||'',age:rec['受洗年齡']||'',phoneH:rec['電話(H)']||'',phoneM:rec['電話(M)']||'',address:rec['地址']||'',email:rec['E_MAIL']||'',baptismType:rec['受洗方式']||'',tookClass:rec['是否上過受洗課程']||'',paperSubmitted:rec['受洗證書申請繳交']||'',paperDate:rec['申請繳交日期']||'',photoSubmitted:rec['已交照片']||'',bibleReceived:rec['聖經領取']||'',certReceived:rec['受洗證書領取']||'',church:rec['教會']||'',maritalStatus:rec['婚姻狀況']||'',couplesBaptism:rec['本次是否\n夫妻同受洗']||rec['本次是否夫妻同受洗']||'',spouseName:rec['您的丈夫/妻子姓名']||'',notes:rec['備註']||'',groupNo:rec['分組']||'',baptismOrder:rec['受洗順序']||''};
   });
 }
 
@@ -245,7 +245,7 @@ var todoF = 'all';
 var selCols = ['batch','no','name','gender','baptismDate','church','smallGroup','photoSubmitted','bibleReceived','certReceived'];
 
 var COLS = [
-  {k:'batch',l:'屆數'},{k:'no',l:'編號'},{k:'name',l:'姓名'},{k:'gender',l:'性別'},
+  {k:'batch',l:'屆數'},{k:'no',l:'編號'},{k:'location',l:'地點'},{k:'name',l:'姓名'},{k:'gender',l:'性別'},
   {k:'baptismDate',l:'受洗日期'},{k:'birthday',l:'生日'},{k:'age',l:'年齡'},
   {k:'district',l:'區'},{k:'bigGroup',l:'大家'},{k:'smallGroup',l:'小家'},
   {k:'church',l:'教會'},{k:'phoneM',l:'手機'},{k:'phoneH',l:'電話H'},
