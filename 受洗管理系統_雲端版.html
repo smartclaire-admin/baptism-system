@@ -203,20 +203,69 @@ var CG = {
   "其他":["其他"]
 };
 
-function parseGviz(text){
-  var m = text.match(/setResponse\(([\s\S]+?)\)\s*;?\s*$/);
-  if(!m) throw new Error('無法解析回應');
-  var data = JSON.parse(m[1]);
-  var cols = data.table.cols.map(function(c){return c.label;});
-  var types = data.table.cols.map(function(c){return c.type;});
-  return (data.table.rows||[]).map(function(row,i){
-    var rec={};
-    cols.forEach(function(col,j){
-      var cell=row.c?row.c[j]:null;
-      rec[col]=(cell&&cell.v!=null)?String(cell.v):(cell&&cell.f!=null)?String(cell.f):'';
+function parseCSV(text){
+  var lines = text.split('\n');
+  var headers = parseCSVRow(lines[0]);
+  var result = [];
+  for(var i=1; i<lines.length; i++){
+    if(!lines[i].trim()) continue;
+    var vals = parseCSVRow(lines[i]);
+    var rec = {};
+    headers.forEach(function(h,j){ rec[h] = vals[j]||''; });
+    result.push({
+      id:i,
+      batch:rec['屆數']||'',
+      no:rec['編號']||'',
+      location:rec['地點']||'',
+      district:rec['區']||'',
+      bigGroup:rec['大家']||'',
+      smallGroup:rec['小家']||'',
+      name:rec['姓名']||'',
+      gender:rec['性別']||'',
+      baptismDate:rec['受洗日期']||'',
+      birthday:rec['生日']||'',
+      age:rec['受洗年齡']||'',
+      phoneH:rec['電話(H)']||'',
+      phoneM:rec['電話(M)']||'',
+      address:rec['地址']||'',
+      email:rec['E_MAIL']||'',
+      baptismType:rec['受洗方式']||'',
+      tookClass:rec['是否上過受洗課程']||'',
+      paperSubmitted:rec['受洗證書申請繳交']||'',
+      paperDate:rec['申請繳交日期']||'',
+      photoSubmitted:rec['已交照片']||'',
+      bibleReceived:rec['聖經領取']||'',
+      certReceived:rec['受洗證書領取']||'',
+      church:rec['教會']||'',
+      maritalStatus:rec['婚姻狀況']||'',
+      couplesBaptism:rec['本次是否夫妻同受洗']||'',
+      spouseName:rec['您的丈夫/妻子姓名']||'',
+      notes:rec['備註']||'',
+      groupNo:rec['分組']||'',
+      baptismOrder:rec['受洗順序']||''
     });
-    return {id:i+1,batch:rec['屆數']||'',no:rec['編號']||'',location:rec['地點']||'',district:rec['區']||'',bigGroup:rec['大家']||'',smallGroup:rec['小家']||'',name:rec['姓名']||'',gender:rec['性別']||'',baptismDate:rec['受洗日期']||'',birthday:rec['生日']||'',age:rec['受洗年齡']||'',phoneH:rec['電話(H)']||'',phoneM:rec['電話(M)']||'',address:rec['地址']||'',email:rec['E_MAIL']||'',baptismType:rec['受洗方式']||'',tookClass:rec['是否上過受洗課程']||'',paperSubmitted:rec['受洗證書申請繳交']||'',paperDate:rec['申請繳交日期']||'',photoSubmitted:rec['已交照片']||'',bibleReceived:rec['聖經領取']||'',certReceived:rec['受洗證書領取']||'',church:rec['教會']||'',maritalStatus:rec['婚姻狀況']||'',couplesBaptism:rec['本次是否\n夫妻同受洗']||rec['本次是否夫妻同受洗']||'',spouseName:rec['您的丈夫/妻子姓名']||'',notes:rec['備註']||'',groupNo:rec['分組']||'',baptismOrder:rec['受洗順序']||''};
-  });
+  }
+  return result;
+}
+
+function parseCSVRow(row){
+  var result = [];
+  var cur = '';
+  var inQuote = false;
+  for(var i=0; i<row.length; i++){
+    var ch = row[i];
+    if(ch === '"'){
+      if(inQuote && row[i+1] === '"'){ cur += '"'; i++; }
+      else { inQuote = !inQuote; }
+    } else if(ch === ',' && !inQuote){
+      result.push(cur.trim());
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  result.push(cur.trim());
+  return result;
 }
 
 // ── 輔助：判斷是否為有效資料（排除取消及空白屆數）
@@ -759,10 +808,10 @@ window.onload = function(){
   document.body.style.background='#faf7f2';
   document.body.innerHTML='<div style="text-align:center"><div style="font-size:48px;color:#c9a84c;margin-bottom:16px">✝</div><div style="font-size:18px;color:#1a2e4a;font-weight:700;margin-bottom:8px">卓越北大教會 受洗管理系統</div><div style="font-size:13px;color:#5a6a7a;margin-bottom:20px">正在載入資料...</div><div style="width:200px;height:4px;background:#d4c9b8;border-radius:2px;overflow:hidden;margin:0 auto"><div style="height:100%;background:#2c6fad;animation:ld 1.5s ease-in-out infinite"></div></div></div><style>@keyframes ld{0%{width:10%}50%{width:80%}100%{width:10%}}</style>';
 
-  fetch('https://docs.google.com/spreadsheets/d/10nL_h-DmAcJBQKssdVzgiLtK3VuS_1wqVRkign0pS1U/gviz/tq?tqx=out:json')
+  fetch('https://docs.google.com/spreadsheets/d/10nL_h-DmAcJBQKssdVzgiLtK3VuS_1wqVRkign0pS1U/export?format=csv&gid=0')
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
     .then(function(text){
-      ALL = parseGviz(text);
+      ALL = parseCSV(text);
       VALID = ALL.filter(isValid);
       filtered = VALID.slice();
       document.body.removeAttribute('style');
