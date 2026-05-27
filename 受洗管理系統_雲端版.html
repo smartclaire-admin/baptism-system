@@ -193,7 +193,15 @@
 var ALL = [];
 var VALID = []; // 排除取消後的有效資料
 var filtered = [];
-var CG = {"北大":["北大","卓越北大行道會","臺北大學教會","北大學青區","北大師母區","北大社青區"],"桃園":["桃園","卓越桃園行道會"],"幸福":["台北幸福","卓越台北幸福行道會","幸福社學青區"],"卓越大學":["卓越大學","卓越大學教會"],"飛航":["飛航","卓越飛航行道會","飛航牧區","卓越飛航福音中心"],"溫哥華":["溫哥華","卓越溫哥華行道會"]};
+var CG = {
+  '北大':    '卓越北大行道會',
+  '桃園':    '卓越桃園行道會',
+  '幸福':    '卓越台北幸福行道會',
+  '卓越大學': '卓越大學教會',
+  '飛航':    '卓越飛航福音中心',
+  '溫哥華':  '卓越溫哥華行道會',
+  '其他':    '其他'
+};
 
 function parseGviz(text){
   var m = text.match(/setResponse\(([\s\S]+?)\)\s*;?\s*$/);
@@ -250,8 +258,8 @@ var COLS = [
 function getBranch(r) {
   var c = r.church || '';
   var keys = Object.keys(CG);
-  for (var i=0; i<keys.length; i++) {
-    if (CG[keys[i]].indexOf(c) !== -1) return keys[i];
+  for (var i = 0; i < keys.length; i++) {
+    if (CG[keys[i]] === c) return keys[i];
   }
   return '其他';
 }
