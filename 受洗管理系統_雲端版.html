@@ -422,7 +422,8 @@ function renderDashboard() {
   var branchSubHtml = '<div class="card-branch-list">' +
     branchDefs.map(function(b){
       var n=bmLatest[b.n]||0;
-      return '<div class="card-branch-item clickable" onclick="showLatestBranchList(''+b.n+'')" title="點選查看'+b.n+'名單"><span class="card-branch-dot dot-'+b.c+'"></span><span class="card-branch-name">'+b.n+'</span><span class="card-branch-n">'+n+'</span></div>';
+      var bn=b.n;
+      return '<div class="card-branch-item clickable" onclick="showLatestBranchList(&quot;'+bn+'&quot;)" title="點選查看'+bn+'名單"><span class="card-branch-dot dot-'+b.c+'"></span><span class="card-branch-name">'+bn+'</span><span class="card-branch-n">'+n+'</span></div>';
     }).join('') +
     (jianTotal>0?'<div class="card-branch-item" style="border-top:1px solid var(--border);padding-top:6px;margin-top:4px"><span class="card-branch-dot" style="background:#e67e22"></span><span class="card-branch-name">堅信禮</span><span class="card-branch-n">'+jianTotal+'</span></div>':'') +
   '</div>';
