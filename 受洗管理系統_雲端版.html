@@ -637,10 +637,9 @@ function sortStatBatches(a,b){
   if(isNumA&&isNumB) return na-nb;
   if(isNumA) return -1;
   if(isNumB) return 1;
-  // 溫X 或 堅X
   var prefA=a.charAt(0), prefB=b.charAt(0);
   if(prefA!==prefB) return prefA.localeCompare(prefB);
-  return parseInt(a.slice(1))||0 - parseInt(b.slice(1))||0;
+  return (parseInt(a.slice(1))||0) - (parseInt(b.slice(1))||0);
 }
 
 var BRANCH_DEFS_STATS=[
