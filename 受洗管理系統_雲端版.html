@@ -393,16 +393,24 @@ var TREND_SERIES = [
   {k:'其他',  color:'#7f8c8d'}
 ];
 
-function renderTrend(){
-  // 只取數字屆
-  var batches=[];
-  var seen={};
-  VALID.forEach(function(r){
-    if(!isNaN(parseFloat(r.batch))&&isFinite(r.batch)&&!seen[r.batch]){seen[r.batch]=1;batches.push(r.batch);}
-  });
-  batches.sort(function(a,b){return parseFloat(a)-parseFloat(b);});
+function getYear(r){
+  if(!r.baptismDate) return null;
+  var d=r.baptismDate;
+  // 格式可能是 2012/08/12 或 2012-08-12
+  var m=d.match(/^(\d{4})/);
+  return m?m[1]:null;
+}
 
-  // 計算每屆各分堂人數 + 記錄日期
+function renderTrend(){
+  // 用年份統計
+  var yearSet={};
+  VALID.forEach(function(r){
+    var y=getYear(r);
+    if(y) yearSet[y]=1;
+  });
+  var batches=Object.keys(yearSet).sort();
+
+  // 計算每年各分堂人數
   var data={};
   var batchDate={};
   batches.forEach(function(b){
@@ -410,11 +418,12 @@ function renderTrend(){
     TREND_SERIES.forEach(function(s){if(s.k!=='合計')data[b][s.k]=0;});
   });
   VALID.forEach(function(r){
-    if(!data[r.batch]) return;
-    data[r.batch]['合計']++;
+    var y=getYear(r);
+    if(!y||!data[y]) return;
+    data[y]['合計']++;
     var br=getBranch(r);
-    if(data[r.batch][br]!==undefined) data[r.batch][br]++;
-    if(!batchDate[r.batch]&&r.baptismDate) batchDate[r.batch]=r.baptismDate;
+    if(data[y][br]!==undefined) data[y][br]++;
+    if(!batchDate[y]) batchDate[y]=y;
   });
 
   // 渲染 chips
@@ -453,9 +462,9 @@ function renderTrend(){
     svg+='<text x="'+(padL-6)+'" y="'+(gy+4)+'" text-anchor="end" font-size="10" fill="#999">'+gv+'</text>';
   }
 
-  // X軸標籤（只顯示每5屆）
+  // X軸標籤（每隔1年顯示）
   batches.forEach(function(b,i){
-    if(parseFloat(b)%5===0||i===0||i===n-1){
+    if(i%2===0||i===n-1){
       svg+='<text x="'+xPos(i)+'" y="'+(H-4)+'" text-anchor="middle" font-size="10" fill="#999">'+b+'</text>';
     }
   });
@@ -469,7 +478,7 @@ function renderTrend(){
     batches.forEach(function(b,i){
       var v=data[b][s.k]||0;
       var dt=batchDate[b]||'';
-      var tip='第'+b+'屆 '+dt+' '+s.k+': '+v+'人';
+      var tip=b+'年 '+s.k+': '+v+'人';
       svg+='<circle cx="'+xPos(i)+'" cy="'+yPos(v)+'" r="4" fill="'+s.color+'" style="cursor:pointer" onmouseenter="showTrendTip(event,this)" data-tip="'+tip+'" onmouseleave="hideTrendTip()"/>';
     });
   });
