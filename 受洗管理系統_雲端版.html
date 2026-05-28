@@ -42,11 +42,11 @@
 
       <div class="grid2">
         <div class="box"><div class="box-title">📅 近10屆受洗人數</div><div id="batchChart"></div></div>
-        <div class="box"><div class="box-title">✅ 待辦事項完成率</div><div id="todoChart"></div></div>
+        <div class="box"><div class="box-title">🚻 性別分布</div><div id="genderChart"></div></div>
       </div>
       <div class="grid2">
-        <div class="box"><div class="box-title">🚻 性別分布</div><div id="genderChart"></div></div>
         <div class="box"><div class="box-title">🙏 受洗方式</div><div id="typeChart"></div></div>
+        <div class="box"><div class="box-title">📅 近10屆受洗人數（各分堂）</div><div id="branchBatchChart"></div></div>
       </div>
     </div>
 
@@ -105,7 +105,7 @@
       <div class="page-hdr"><div><div class="page-title">統計報表</div><div class="page-sub">各屆詳細統計數據</div></div></div>
       <div class="twrap"><div class="tscroll">
         <table>
-          <thead><tr><th>屆數</th><th>總人數</th><th>男</th><th>女</th><th>已交照片</th><th>照片率</th><th>已領聖經</th><th>聖經率</th><th>已領證書</th><th>證書率</th><th>已繳紙本</th><th>紙本率</th></tr></thead>
+          <thead><tr><th>屆數</th><th>總人數</th><th>男</th><th>女</th><th>北大</th><th>桃園</th><th>幸福</th><th>卓越大學</th><th>飛航</th><th>溫哥華</th><th>其他</th></tr></thead>
           <tbody id="statsBody"></tbody>
         </table>
       </div></div>
@@ -419,19 +419,19 @@ function renderDashboard() {
   });
   var jianTotal = jianData.length;
 
-  var branchSubHtml = '<div class="card-branch-grid">' +
+  var branchSubHtml = '<div class="card-branch-list">' +
     branchDefs.map(function(b){
       var n=bmLatest[b.n]||0;
-      return '<div class="card-branch-item"><span class="card-branch-dot dot-'+b.c+'"></span><span class="card-branch-name">'+b.n+'</span><span class="card-branch-n">'+n+'</span></div>';
+      return '<div class="card-branch-item clickable" onclick="showLatestBranchList(''+b.n+'')" title="點選查看'+b.n+'名單"><span class="card-branch-dot dot-'+b.c+'"></span><span class="card-branch-name">'+b.n+'</span><span class="card-branch-n">'+n+'</span></div>';
     }).join('') +
-    (jianTotal>0?'<div class="card-branch-item" style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:6px;margin-top:4px"><span class="card-branch-dot" style="background:#e67e22"></span><span class="card-branch-name">堅信禮</span><span class="card-branch-n">'+jianTotal+'</span></div>':'') +
+    (jianTotal>0?'<div class="card-branch-item" style="border-top:1px solid var(--border);padding-top:6px;margin-top:4px"><span class="card-branch-dot" style="background:#e67e22"></span><span class="card-branch-name">堅信禮</span><span class="card-branch-n">'+jianTotal+'</span></div>':'') +
   '</div>';
 
   document.getElementById('dashCards').innerHTML =
     '<div class="card blue"><div class="card-lbl">本屆受洗人數</div><div class="card-val">'+latestTotal.toLocaleString()+'</div><div class="card-sub">第'+latest+'屆</div>'+branchSubHtml+'</div>' +
-    card('gold','未交照片',photoNo,'已交 '+(latestTotal-photoNo)+' 人') +
-    card('purple','受洗課程未完成',classNo,'已完成 '+(latestTotal-classNo)+' 人') +
-    card('red','證書申請未繳交',paperNo,'已繳 '+(latestTotal-paperNo)+' 人');
+    cardClick('gold','未交照片',photoNo,'已交 '+(latestTotal-photoNo)+' 人','showLatestTodoList(\'photo\')') +
+    cardClick('purple','受洗課程未完成',classNo,'已完成 '+(latestTotal-classNo)+' 人','showLatestTodoList(\'class\')') +
+    cardClick('red','證書申請未繳交',paperNo,'已繳 '+(latestTotal-paperNo)+' 人','showLatestTodoList(\'paper\')');
 
   // 近10屆受洗人數（使用VALID）
   var batchMap={};
@@ -442,14 +442,7 @@ function renderDashboard() {
     return barRow('第'+b+'屆', batchMap[b]/maxB*100, batchMap[b], '');
   }).join('');
 
-  // 待辦完成率（使用VALID）
-  var photoOkAll = VALID.filter(photoOk).length;
-  var bibleOkAll = VALID.filter(function(r){return r.bibleReceived&&r.bibleReceived!=='-'&&r.bibleReceived!=='否';}).length;
-  var certOkAll  = VALID.filter(function(r){return r.certReceived&&r.certReceived!=='-'&&r.certReceived!=='否'&&r.certReceived!=='待確認';}).length;
-  var paperOkAll = VALID.filter(paperOk).length;
-  document.getElementById('todoChart').innerHTML = [
-    ['已交照片',photoOkAll,'green'],['已領聖經',bibleOkAll,'gold'],['已領證書',certOkAll,''],['已繳申請',paperOkAll,'purple']
-  ].map(function(x){return barRow(x[0],x[1]/total*100,(x[1]/total*100).toFixed(0)+'%',x[2]);}).join('');
+
 
   // 性別分布（使用VALID）
   var male=VALID.filter(function(r){return r.gender==='男';}).length;
@@ -470,6 +463,45 @@ function renderDashboard() {
 
 function card(cls,lbl,val,sub){
   return '<div class="card '+cls+'"><div class="card-lbl">'+lbl+'</div><div class="card-val">'+val+'</div><div class="card-sub">'+sub+'</div></div>';
+}
+function cardClick(cls,lbl,val,sub,onclick){
+  return '<div class="card '+cls+' clickable" onclick="'+onclick+'" title="點選查看名單" style="cursor:pointer"><div class="card-lbl">'+lbl+' <span style="font-size:10px;opacity:.6">▶ 點選查看</span></div><div class="card-val">'+val+'</div><div class="card-sub">'+sub+'</div></div>';
+}
+
+function showLatestTodoList(type){
+  var latest = getLatestBatch();
+  var latestDate = VALID.filter(function(r){return r.batch===latest;})[0] ? VALID.filter(function(r){return r.batch===latest;})[0].baptismDate : '';
+  var data = VALID.filter(function(r){return r.batch===latest;});
+  var title = '';
+  if(type==='photo'){data=data.filter(function(r){return !photoOk(r);});title='本屆未交照片';}
+  else if(type==='class'){data=data.filter(function(r){return !classOk(r);});title='本屆課程未完成';}
+  else if(type==='paper'){data=data.filter(function(r){return !paperOk(r);});title='本屆證書申請未繳交';}
+  showListModal(title, data);
+}
+
+function showLatestBranchList(branch){
+  var latest = getLatestBatch();
+  var data = VALID.filter(function(r){return r.batch===latest && getBranch(r)===branch;});
+  showListModal('本屆'+branch+'名單', data);
+}
+
+function showListModal(title, data){
+  document.getElementById('mName').textContent = title+'（共'+data.length+'人）';
+  var html = '<div class="tscroll"><table style="width:100%;font-size:13px;border-collapse:collapse">'+
+    '<thead><tr style="background:var(--navy);color:white"><th style="padding:8px 12px;text-align:left">編號</th><th style="padding:8px 12px;text-align:left">姓名</th><th style="padding:8px 12px;text-align:left">性別</th><th style="padding:8px 12px;text-align:left">教會</th><th style="padding:8px 12px;text-align:left">小家</th><th style="padding:8px 12px;text-align:left">電話</th></tr></thead><tbody>';
+  data.forEach(function(r){
+    html+='<tr style="border-bottom:1px solid #f0ebe2">'+
+      '<td style="padding:8px 12px">'+(r.no||'-')+'</td>'+
+      '<td style="padding:8px 12px"><strong>'+r.name+'</strong></td>'+
+      '<td style="padding:8px 12px">'+(r.gender||'-')+'</td>'+
+      '<td style="padding:8px 12px">'+(r.church||'-')+'</td>'+
+      '<td style="padding:8px 12px">'+(r.smallGroup||'-')+'</td>'+
+      '<td style="padding:8px 12px">'+(r.phoneM||r.phoneH||'-')+'</td>'+
+    '</tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('mBody').innerHTML = html;
+  document.getElementById('overlay').classList.add('open');
 }
 function barRow(lbl,pct,cnt,cls){
   return '<div class="bar-row"><div class="bar-lbl">'+lbl+'</div><div class="bar-track"><div class="bar-fill '+cls+'" style="width:'+Math.min(100,pct).toFixed(1)+'%"></div></div><div class="bar-cnt">'+cnt+'</div></div>';
@@ -590,31 +622,55 @@ function renderTodo(){
 }
 
 // ── Stats ──
+function isValidStatBatch(b){
+  // 只顯示數字屆、溫X、堅X
+  if(!isNaN(parseFloat(b))&&isFinite(b)) return true;
+  if(b.indexOf('溫')===0) return true;
+  if(b.indexOf('堅')===0) return true;
+  return false;
+}
+
+function sortStatBatches(a,b){
+  var na=parseFloat(a), nb=parseFloat(b);
+  var isNumA=!isNaN(na)&&isFinite(a);
+  var isNumB=!isNaN(nb)&&isFinite(b);
+  if(isNumA&&isNumB) return na-nb;
+  if(isNumA) return -1;
+  if(isNumB) return 1;
+  // 溫X 或 堅X
+  var prefA=a.charAt(0), prefB=b.charAt(0);
+  if(prefA!==prefB) return prefA.localeCompare(prefB);
+  return parseInt(a.slice(1))||0 - parseInt(b.slice(1))||0;
+}
+
+var BRANCH_DEFS_STATS=[
+  {n:'北大',c:'c1'},{n:'桃園',c:'c2'},{n:'幸福',c:'c3'},
+  {n:'卓越大學',c:'c4'},{n:'飛航',c:'c5'},{n:'溫哥華',c:'c6'},{n:'其他',c:'c7'}
+];
+
 function renderStats(){
   var bm={};
   VALID.forEach(function(r){
     var b=r.batch||'(未填)';
-    if(!bm[b])bm[b]={t:0,m:0,f:0,ph:0,bi:0,ce:0,pa:0};
+    if(!isValidStatBatch(b)) return;
+    if(!bm[b])bm[b]={t:0,m:0,f:0,branches:{}};
     var x=bm[b];x.t++;
     if(r.gender==='男')x.m++;if(r.gender==='女')x.f++;
-    if(photoOk(r))x.ph++;
-    if(r.bibleReceived&&r.bibleReceived!=='-'&&r.bibleReceived!=='否')x.bi++;
-    if(r.certReceived&&r.certReceived!=='-'&&r.certReceived!=='否'&&r.certReceived!=='待確認')x.ce++;
-    if(paperOk(r))x.pa++;
+    var br=getBranch(r);
+    x.branches[br]=(x.branches[br]||0)+1;
   });
-  var sorted=Object.keys(bm).sort(function(a,b){var na=parseFloat(a),nb=parseFloat(b);return(!isNaN(na)&&!isNaN(nb))?na-nb:a.localeCompare(b);});
+  var sorted=Object.keys(bm).filter(isValidStatBatch).sort(sortStatBatches);
   var html='';
   sorted.forEach(function(b){
     var x=bm[b];
-    var pct=function(n,d){return d?(n/d*100).toFixed(0)+'%':'-';};
-    var pc=function(n,d){if(!d)return'';var p=n/d*100;return p>=80?'color:var(--green)':p>=50?'color:var(--gold)':'color:var(--red)';};
     html+='<tr>'+
       '<td><span class="badge bb">第'+b+'屆</span></td>'+
-      '<td><strong>'+x.t+'</strong></td><td>'+x.m+'</td><td>'+x.f+'</td>'+
-      '<td>'+x.ph+'</td><td style="'+pc(x.ph,x.t)+'">'+pct(x.ph,x.t)+'</td>'+
-      '<td>'+x.bi+'</td><td style="'+pc(x.bi,x.t)+'">'+pct(x.bi,x.t)+'</td>'+
-      '<td>'+x.ce+'</td><td style="'+pc(x.ce,x.t)+'">'+pct(x.ce,x.t)+'</td>'+
-      '<td>'+x.pa+'</td><td style="'+pc(x.pa,x.t)+'">'+pct(x.pa,x.t)+'</td>'+
+      '<td><strong>'+x.t+'</strong></td>'+
+      '<td>'+x.m+'</td>'+
+      '<td>'+x.f+'</td>'+
+      BRANCH_DEFS_STATS.map(function(br){
+        return '<td>'+(x.branches[br.n]||0)+'</td>';
+      }).join('')+
     '</tr>';
   });
   document.getElementById('statsBody').innerHTML=html;
@@ -875,7 +931,8 @@ body{font-family:"Microsoft JhengHei","PingFang TC","Apple LiGothic",sans-serif;
 .card-sub{font-size:11px;color:var(--text-muted);margin-top:6px}
 
 /* 本屆卡片內各分堂小計 */
-.card-branch-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.card-branch-list{display:flex;flex-direction:column;gap:4px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.clickable{cursor:pointer;transition:opacity .15s}.clickable:hover{opacity:.75}
 .card-branch-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted)}
 .card-branch-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .dot-c1{background:#2c6fad}.dot-c2{background:#e67e22}.dot-c3{background:#27ae60}
@@ -1012,11 +1069,11 @@ td{padding:9px 12px;white-space:nowrap;vertical-align:middle}
 
       <div class="grid2">
         <div class="box"><div class="box-title">📅 近10屆受洗人數</div><div id="batchChart"></div></div>
-        <div class="box"><div class="box-title">✅ 待辦事項完成率</div><div id="todoChart"></div></div>
+        <div class="box"><div class="box-title">🚻 性別分布</div><div id="genderChart"></div></div>
       </div>
       <div class="grid2">
-        <div class="box"><div class="box-title">🚻 性別分布</div><div id="genderChart"></div></div>
         <div class="box"><div class="box-title">🙏 受洗方式</div><div id="typeChart"></div></div>
+        <div class="box"><div class="box-title">📅 近10屆受洗人數（各分堂）</div><div id="branchBatchChart"></div></div>
       </div>
     </div>
 
@@ -1075,7 +1132,7 @@ td{padding:9px 12px;white-space:nowrap;vertical-align:middle}
       <div class="page-hdr"><div><div class="page-title">統計報表</div><div class="page-sub">各屆詳細統計數據</div></div></div>
       <div class="twrap"><div class="tscroll">
         <table>
-          <thead><tr><th>屆數</th><th>總人數</th><th>男</th><th>女</th><th>已交照片</th><th>照片率</th><th>已領聖經</th><th>聖經率</th><th>已領證書</th><th>證書率</th><th>已繳紙本</th><th>紙本率</th></tr></thead>
+          <thead><tr><th>屆數</th><th>總人數</th><th>男</th><th>女</th><th>北大</th><th>桃園</th><th>幸福</th><th>卓越大學</th><th>飛航</th><th>溫哥華</th><th>其他</th></tr></thead>
           <tbody id="statsBody"></tbody>
         </table>
       </div></div>
