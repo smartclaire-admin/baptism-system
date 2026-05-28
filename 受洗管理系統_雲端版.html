@@ -411,11 +411,20 @@ function renderDashboard() {
   // 本屆各分堂小計（用在第1張卡片下方）
   var bmLatest={};
   latestData.forEach(function(r){var b=getBranch(r);bmLatest[b]=(bmLatest[b]||0)+1;});
+
+  // 本屆堅信禮人數（找跟最新屆同一天受洗且屆數以「堅」開頭）
+  var latestDate = latestData.length ? latestData[0].baptismDate : '';
+  var jianData = VALID.filter(function(r){
+    return r.batch.indexOf('堅')===0 && r.baptismDate === latestDate;
+  });
+  var jianTotal = jianData.length;
+
   var branchSubHtml = '<div class="card-branch-grid">' +
     branchDefs.map(function(b){
       var n=bmLatest[b.n]||0;
       return '<div class="card-branch-item"><span class="card-branch-dot dot-'+b.c+'"></span><span class="card-branch-name">'+b.n+'</span><span class="card-branch-n">'+n+'</span></div>';
     }).join('') +
+    (jianTotal>0?'<div class="card-branch-item" style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:6px;margin-top:4px"><span class="card-branch-dot" style="background:#e67e22"></span><span class="card-branch-name">堅信禮</span><span class="card-branch-n">'+jianTotal+'</span></div>':'') +
   '</div>';
 
   document.getElementById('dashCards').innerHTML =
