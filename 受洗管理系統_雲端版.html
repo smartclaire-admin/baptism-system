@@ -49,7 +49,7 @@
         <div class="box"><div class="box-title">🔢 編號跳號檢查</div><div id="missingNos"></div></div>
       </div>
       <div class="box" style="margin-bottom:20px">
-        <div class="box-title">📈 各屆受洗人數趨勢</div>
+        <div class="box-title">📈 年度受洗人數趨勢</div>
         <div id="trendChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
         <div id="trendChart" style="position:relative;height:260px;overflow:hidden"></div>
       </div>
@@ -351,7 +351,15 @@ function updateHdr() {
   document.getElementById('hPhoto').textContent = latestData.filter(function(r){return !photoOk(r);}).length;
   document.getElementById('hClass').textContent = latestData.filter(function(r){return !classOk(r);}).length;
   document.getElementById('hPaper').textContent = latestData.filter(function(r){return !paperOk(r);}).length;
+  // todoBadge 只顯示最新屆待辦人數
+  var _latest = getLatestBatch();
+  var _latestDate = '';
+  var _latestRows = VALID.filter(function(r){return r.batch===_latest;});
+  if(_latestRows.length) _latestDate = _latestRows[0].baptismDate;
   document.getElementById('todoBadge').textContent = VALID.filter(function(r){
+    var isLatest = r.batch===_latest;
+    var isSameDay = _latestDate && r.baptismDate===_latestDate && (r.batch.indexOf('堅')===0||r.batch.indexOf('溫')===0);
+    if(!isLatest && !isSameDay) return false;
     return !photoOk(r)||r.bibleReceived!=='是'||r.certReceived!=='是'||!paperOk(r);
   }).length;
 }
@@ -1250,7 +1258,7 @@ td{padding:9px 12px;white-space:nowrap;vertical-align:middle}
         <div class="box"><div class="box-title">🔢 編號跳號檢查</div><div id="missingNos"></div></div>
       </div>
       <div class="box" style="margin-bottom:20px">
-        <div class="box-title">📈 各屆受洗人數趨勢</div>
+        <div class="box-title">📈 年度受洗人數趨勢</div>
         <div id="trendChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
         <div id="trendChart" style="position:relative;height:260px;overflow:hidden"></div>
       </div>
