@@ -427,7 +427,7 @@ function renderDashboard() {
   // 近10屆受洗人數（使用VALID）
   var batchMap={};
   VALID.forEach(function(r){if(r.batch)batchMap[r.batch]=(batchMap[r.batch]||0)+1;});
-  var sortedB=Object.keys(batchMap).sort(function(a,b){var na=parseFloat(a),nb=parseFloat(b);return(!isNaN(na)&&!isNaN(nb))?na-nb:a.localeCompare(b);}).slice(-10);
+  var sortedB=Object.keys(batchMap).filter(function(b){return !isNaN(parseFloat(b))&&isFinite(b);}).sort(function(a,b){return parseFloat(a)-parseFloat(b);}).slice(-10);
   var maxB=Math.max.apply(null,sortedB.map(function(b){return batchMap[b];}));
   document.getElementById('batchChart').innerHTML = sortedB.map(function(b){
     return barRow('第'+b+'屆', batchMap[b]/maxB*100, batchMap[b], '');
