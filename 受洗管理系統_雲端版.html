@@ -535,9 +535,9 @@ function renderDashboard() {
   VALID.forEach(function(r){var b=getBranch(r);bmAll[b]=(bmAll[b]||0)+1;});
   var totalCard = '<div class="bc c0"><div class="bc-name">總受洗人數</div><div class="bc-count" style="color:var(--navy)">'+total.toLocaleString()+'</div><div class="bc-pct">共'+Object.keys(function(){var s={};VALID.forEach(function(r){s[r.batch]=1;});return s;}()).length+'屆</div></div>';
 
-  // 計算屆數總數
+  // 計算屆數總數（只算數字屆）
   var batchCountObj={};
-  VALID.forEach(function(r){if(r.batch)batchCountObj[r.batch]=1;});
+  VALID.forEach(function(r){if(r.batch&&!isNaN(parseFloat(r.batch))&&isFinite(r.batch))batchCountObj[r.batch]=1;});
   var batchCount = Object.keys(batchCountObj).length;
 
   document.getElementById('branchGrid').innerHTML =
